@@ -13,5 +13,6 @@ run:
 	$(BUILD)/main.out
 
 clean:
-	rm -f *.o
 	rm -rf $(BUILD)
+	rm -f *.o
+	rm -f *.jpg
