@@ -7,12 +7,26 @@ BUILD = ./build
 
 all:
 	mkdir -p $(BUILD)
+	echo "Building.."
 	g++ $(CFLAGS) $(LIBS) $(SRC)/main.cpp -o $(BUILD)/main.out
+	echo "Generated $(BUILD)/main.out \nEnter 'make run' to execute."
 
 run:
-	$(BUILD)/main.out
+	if [ -f "./build/main.out" ]; then echo "Running $(BUILD)/main.out"; $(BUILD)/main.out; else echo "Build not found. Run 'make' first."; fi
 
 clean:
 	rm -rf $(BUILD)
 	rm -f *.o
 	rm -f *.jpg
+	echo "Cleaned."
+
+help: 
+	echo "Commands:"
+	echo "'make'      : builds the executable."
+	echo "'make run'  : runs the executable. Does not create the executable."
+	echo "'make clean': removes the build files."
+
+.DEFAULT: 
+	@echo "No such command found. Run 'make help' for more info."
+
+.SILENT: all run clean help
