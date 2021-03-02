@@ -99,6 +99,11 @@ void density_calculator(Mat homography, Rect crop_coordinates)
 
     int TP = frame_empty.rows * frame_empty.cols;
     int framecounter = 0;
+    
+    Mat previous; //stores the previous frame required for optical flow
+    cap.read(previous);
+    cvtColor(previous, previous, COLOR_BGR2GRAY); //converts to grayscale
+    
     while (true)
     {
         Mat frame, frame_warped, frame_cropped, frame_mask, frame_bg;
@@ -121,19 +126,55 @@ void density_calculator(Mat homography, Rect crop_coordinates)
         //show the frame in the created window
         imshow("cropped", frame_cropped);
         imshow("masked", frame_mask);
-
+        
+        Mat next; //next frame for optical flow
+        cap.read(next);
+        cvtColor(next,next, COLOR_BGR2GRAY);
+        if (next.empty()){break;}
+        
+        Mat flow(previous.size(), CV_32FC2); //initializes a flow matrix of two channels (for flows in x and y directions)
+        calcOpticalFlowFarneback(previous, next, flow, 0.5, 3, 15, 3, 7, 1.5, 0);      //calculates the optical flow
+        
+        // visualization
+        Mat flow_parts[2];
+        split(flow, flow_parts);                //split the flow matrix into 2 channels
+        Mat magnitude, angle, magn_norm;        //magnitude of flow, angle, and normalized magnitude matrices
+        cartToPolar(flow_parts[0], flow_parts[1], magnitude, angle, true);  //converts cartesian flows in x and y to polar forms in r and theta
+        //true is for angle in degrees
+        normalize(magnitude, magn_norm, 0.0f, 1.0f, NORM_MINMAX); //normalise magnitudes in the range 0-1 linearly
+        //will calculate sum of magnitudes of the matrix and divide by the size of the matrix
+        double total = cv::sum(magn_norm)[0];
+        int tp2 =magn_norm.rows*magn_norm.cols;
+        angle *= ((1.f / 360.f) * (180.f / 255.f));
+        
+        //build hsv image
+        Mat _hsv[3], hsv, hsv8, dynMat, dynWarped, dynCropped;
+        _hsv[0] = angle;
+        _hsv[1] = Mat::ones(angle.size(), CV_32F);
+        _hsv[2] = magn_norm;
+        merge(_hsv, 3, hsv);        //merge all into a single 3 channel matrix
+        hsv.convertTo(hsv8, CV_8U, 255.0);      //convert hsv matrix to a matrix in pixel range of 0-255
+        
+        cvtColor(hsv8, dynMat, COLOR_HSV2BGR);
+        //cvtColor(dynMat,dynMat,COLOR_BGR2GRAY);
+        warpPerspective(dynMat,dynWarped, homography, dynMat.size());
+        dynCropped = dynWarped(crop_coordinates);
+        
+        imshow("dynamicMasked", dynCropped);
         //wait for for 10 ms until any key is pressed.
         //If the 'Esc' key is pressed, break the while loop.
         //If the any other key is pressed, continue the loop
         //If any key is not pressed withing 1 ms, continue the loop
         if (waitKey(1) == 27)
         {
-            cout << "Esc key is pressed by user. Stoppig the video" << endl;
+            cout << "Esc key is pressed by user. Stopping the video" << endl;
             break;
         }
 
         int white = countNonZero(frame_mask);
-        cout << framecounter << ": " << (0.0 + white) / TP << endl;
+        cout << framecounter << ": " << (0.0 + white) / TP << " " << (total*10.0)/tp2<<endl;
+        previous=next;
+        
     }
 }
 
