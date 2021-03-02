@@ -68,11 +68,82 @@ vector<Point2f> get_dst_points(vector<Point2f> pts_src)
     return pts_dst;
 }
 
+void density_calculator(Mat homography, Rect crop_coordinates)
+{
+    VideoCapture cap("./assets/trafficvideo.mp4");
+    if (cap.isOpened() == false)
+    {
+        cout << "Cannot open the video file" << endl;
+        cin.get(); // wait for any key press
+        return;
+    }
+
+    Mat frame_empty;
+    cap.set(CAP_PROP_POS_FRAMES, 347 * 15);
+    cap.read(frame_empty);
+
+    cvtColor(frame_empty, frame_empty, cv::COLOR_BGR2GRAY);
+    warpPerspective(frame_empty, frame_empty, homography, frame_empty.size());
+    frame_empty = frame_empty(crop_coordinates);
+    double fps = cap.get(CAP_PROP_FPS);
+
+    cout << "Frames per seconds : " << fps << endl;
+
+    Ptr<BackgroundSubtractor> pBackSub;
+    pBackSub = createBackgroundSubtractorMOG2(1, 60, false);
+    pBackSub->apply(frame_empty, frame_empty, 1.0);
+    cap.set(CAP_PROP_POS_FRAMES, 0);
+    namedWindow("cropped", WINDOW_NORMAL); //create a window for displaying cropped image
+    namedWindow("masked", WINDOW_NORMAL);  //create a window for displaying the mask
+    cap.set(CAP_PROP_POS_FRAMES, 0);
+
+    int TP = frame_empty.rows * frame_empty.cols;
+    int framecounter = 0;
+    while (true)
+    {
+        Mat frame, frame_warped, frame_cropped, frame_mask, frame_bg;
+        bool bSuccess = cap.read(frame); // read a new frame from video
+
+        if (bSuccess == false)
+        {
+            cout << "Found the end of the video" << endl;
+            break;
+        }
+        if (framecounter++ % 15 != 0)
+            continue;
+
+        cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
+        warpPerspective(frame, frame_warped, homography, frame.size());
+        frame_cropped = frame_warped(crop_coordinates);
+        pBackSub->apply(frame_cropped, frame_mask, 0.0);
+        pBackSub->getBackgroundImage(frame_bg);
+
+        //show the frame in the created window
+        imshow("cropped", frame_cropped);
+        imshow("masked", frame_mask);
+
+        //wait for for 10 ms until any key is pressed.
+        //If the 'Esc' key is pressed, break the while loop.
+        //If the any other key is pressed, continue the loop
+        //If any key is not pressed withing 1 ms, continue the loop
+        if (waitKey(1) == 27)
+        {
+            cout << "Esc key is pressed by user. Stoppig the video" << endl;
+            break;
+        }
+
+        int white = countNonZero(frame_mask);
+        cout << framecounter << ": " << (0.0 + white) / TP << endl;
+    }
+}
+
 int main(int argc, char *argv[])
 {
     // reading the two images in grayscale
     Mat im_empty = imread("./assets/empty.jpg", IMREAD_GRAYSCALE);
     Mat im_traffic = imread("./assets/traffic.jpg", IMREAD_GRAYSCALE);
+    // Mat im_empty = imread("./assets/empty.jpg");
+    // Mat im_traffic = imread("./assets/traffic.jpg");
 
     // creating a copy of the first image and displaying it
     Mat im_empty_copy = im_empty.clone();
@@ -101,20 +172,20 @@ int main(int argc, char *argv[])
     warpPerspective(im_empty, im_empty_warped, homography, im_empty.size());
     warpPerspective(im_traffic, im_traffic_warped, homography, im_traffic.size());
 
-    // displaying the warped image and then destroying its window after user presses any key
-    imshow("Warped", im_empty_warped);
-    waitKey(0);
-    destroyWindow("Warped");
+    // // displaying the warped image and then destroying its window after user presses any key
+    // imshow("Warped", im_empty_warped);
+    // waitKey(1);
+    // destroyWindow("Warped");
 
     // cropping the warped image
     Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
     im_empty_cropped = im_empty_warped(crop_coordinates);
     im_traffic_cropped = im_traffic_warped(crop_coordinates);
 
-    // displaying the cropped image
-    imshow("Cropped", im_empty_cropped);
-    waitKey(0);
-    destroyWindow("Cropped");
+    // // displaying the cropped image
+    // imshow("Cropped", im_empty_cropped);
+    // waitKey(1);
+    // destroyWindow("Cropped");
 
     // writing the warped and cropped images
     imwrite("empty_warped.jpg", im_empty_warped);
@@ -122,5 +193,6 @@ int main(int argc, char *argv[])
     imwrite("traffic_warped.jpg", im_traffic_warped);
     imwrite("traffic_cropped.jpg", im_traffic_cropped);
 
+    density_calculator(homography, crop_coordinates);
     return 0;
 }
