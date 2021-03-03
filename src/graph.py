@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 Time_second = [] 
 Static_Density= []
 Dynamic_Density = []  
-f=open("out.txt","r");
+f=open("./results/out.txt","r");
 for x in f:
 	tuplet=x.split()
 	Time_second.append(float(tuplet[0])/15.0)
@@ -24,6 +24,6 @@ plt.ylabel('Density')
 plt.title('Static and Dynamic densities')   
 # show a legend on the plot 
 plt.legend(loc=2, fontsize= 'x-small') 
-plt.savefig('plot.png',dpi=300,bbox_inches='tight');  
+plt.savefig('./results/plot.png',dpi=300,bbox_inches='tight');  
 # function to show the plot 
 plt.show() 

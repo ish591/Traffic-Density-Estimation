@@ -11,7 +11,9 @@ all:
 	g++ $(CFLAGS) $(LIBS) $(SRC)/main.cpp -o $(BUILD)/main.out
 	echo "Generated $(BUILD)/main.out \nEnter 'make run' to execute."
 	if [ -f "./build/main.out" ]; then echo "Running $(BUILD)/main.out"; $(BUILD)/main.out; else echo "Build not found. Run 'make' first."; fi
-	
+
+graph:
+	if [ -f "./results/out.txt" ]; then python src/graph.py; else echo "output file not found"; fi
 download: 
 	if [ -f "./assets/trafficvideo.mp4" ]; then echo "Already downloaded!"; else curl https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/trafficvideo.mp4 -o assets/trafficvideo.mp4; fi
 
@@ -33,4 +35,4 @@ help:
 .DEFAULT: 
 	@echo "No such command found. Run 'make help' for more info."
 
-.SILENT: all run clean help download
+.SILENT: all run clean help download graph
