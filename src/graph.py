@@ -24,6 +24,4 @@ plt.ylabel('Density')
 plt.title('Static and Dynamic densities')   
 # show a legend on the plot 
 plt.legend(loc=2, fontsize= 'x-small') 
-plt.savefig('./results/plot.png',dpi=300,bbox_inches='tight');  
-# function to show the plot 
-plt.show() 
+plt.savefig('./results/plot.png',dpi=300,bbox_inches='tight')
