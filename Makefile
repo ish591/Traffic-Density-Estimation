@@ -10,7 +10,6 @@ all:
 	echo "Building.."
 	g++ $(CFLAGS) $(LIBS) $(SRC)/main.cpp -o $(BUILD)/main.out
 	echo "Generated $(BUILD)/main.out \nEnter 'make run' to execute."
-	if [ -f "./build/main.out" ]; then echo "Running $(BUILD)/main.out"; $(BUILD)/main.out; else echo "Build not found. Run 'make' first."; fi
 
 graph:
 	if [ -f "./results/out.txt" ]; then python src/graph.py; else echo "output file not found"; fi
