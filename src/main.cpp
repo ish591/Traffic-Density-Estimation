@@ -20,7 +20,6 @@ void clickEvent(int event, int x, int y, int flags, void *params)
     Mat *im_empty = (Mat *)params;
     if (event == EVENT_LBUTTONDOWN)
     {
-        // cout << "(" << x << ", " << y << ")\n";
         circle(*im_empty, Point2f(x, y), 9, Scalar(20, 20, 20), -1); // to display a circular dot at points of selection
         selected_pts.push_back({x, y});
         imshow("Empty", *im_empty);
@@ -68,13 +67,15 @@ vector<Point2f> get_dst_points(vector<Point2f> pts_src)
     return pts_dst;
 }
 
+//The function below computes dynamic queue density
 pair<float, Mat> compute_dynamic(Mat frame, Mat frame_cropped_previous, Mat homography, Rect crop_coordinates, int total_pixels)
 {
     Mat frame_cropped_next;
-    warpPerspective(frame, frame_cropped_next, homography, frame.size());
+    warpPerspective(frame, frame_cropped_next, homography, frame.size());     //warping and cropping the next frame
     frame_cropped_next = frame_cropped_next(crop_coordinates);
-    Mat flow(frame_cropped_previous.size(), CV_32FC2);                                                    //initializes a flow matrix of two channels (for flows in x and y directions)
+    Mat flow(frame_cropped_previous.size(), CV_32FC2);                        //initializes a flow matrix of two channels (for flows in x and y directions)
     calcOpticalFlowFarneback(frame_cropped_previous, frame_cropped_next, flow, 0.5, 3, 15, 3, 7, 1.5, 0); //calculates the optical flow
+    
     // visualization
     Mat flow_parts[2];
     split(flow, flow_parts);                                           //split the flow matrix into 2 channels
@@ -82,8 +83,8 @@ pair<float, Mat> compute_dynamic(Mat frame, Mat frame_cropped_previous, Mat homo
     cartToPolar(flow_parts[0], flow_parts[1], magnitude, angle, true); //converts cartesian flows in x and y to polar forms in r and theta
     //true is for angle in degrees
     normalize(magnitude, magn_norm, 0.0f, 1.0f, NORM_MINMAX); //normalise magnitudes in the range 0-1 linearly
-    //will calculate sum of magnitudes of the matrix and divide by the size of the matrix
-    angle *= ((1.f / 360.f) * (180.f / 255.f));
+    angle *= ((1.f / 360.f) * (180.f / 255.f));    //angle computation
+    
     //build hsv image
     Mat _hsv[3], hsv, hsv8, dynamic_mat_color, dynamic_mat_bw;
     _hsv[0] = angle;
@@ -92,33 +93,35 @@ pair<float, Mat> compute_dynamic(Mat frame, Mat frame_cropped_previous, Mat homo
     merge(_hsv, 3, hsv);               //merge all into a single 3 channel matrix
     hsv.convertTo(hsv8, CV_8U, 255.0); //convert hsv matrix to a matrix in pixel range of 0-255
     cvtColor(hsv8, dynamic_mat_color, COLOR_HSV2BGR);
-    cvtColor(dynamic_mat_color, dynamic_mat_bw, COLOR_BGR2GRAY);
-    dynamic_mat_bw = dynamic_mat_bw > 12;
-    float dynamic_density = ((float)countNonZero(dynamic_mat_bw)) / total_pixels;
+    cvtColor(dynamic_mat_color, dynamic_mat_bw, COLOR_BGR2GRAY);  //converting into a grayscale matrix
+    dynamic_mat_bw = dynamic_mat_bw > 12;                         //threshold to convert grayscal to pure black-white image
+    float dynamic_density = ((float)countNonZero(dynamic_mat_bw)) / total_pixels;    //computation of dynamic density
     imshow("dynamicMasked", dynamic_mat_color);
     return {dynamic_density, frame_cropped_next};
 }
 
+//The function below computes static queue density
 float compute_static(Mat frame, Mat homography, Rect crop_coordinates, Ptr<BackgroundSubtractor> pBackSub, int total_pixels)
 {
     Mat frame_warped, frame_cropped, frame_mask;
-    warpPerspective(frame, frame_warped, homography, frame.size());
+    warpPerspective(frame, frame_warped, homography, frame.size());  //warping, cropping and applying background subtraction
     frame_cropped = frame_warped(crop_coordinates);
     pBackSub->apply(frame_cropped, frame_mask, 0.0);
-    // pBackSub->getBackgroundImage(frame_bg);
 
     //show the frame in the created window
     imshow("cropped", frame_cropped);
     imshow("masked", frame_mask);
-    float static_density = ((float)countNonZero(frame_mask)) / total_pixels;
+    float static_density = ((float)countNonZero(frame_mask)) / total_pixels;  //computing static queue density
     return static_density;
 }
 
 void density_calculator(Mat homography, Rect crop_coordinates)
+//function called from main to compute both the densities
 {
+    //opening the output file
     ofstream fout;
     fout.open("./results/out.txt", std::ofstream::out | std::ofstream::trunc);
-
+    
     VideoCapture cap("./assets/trafficvideo.mp4");
     if (cap.isOpened() == false)
     {
@@ -128,18 +131,18 @@ void density_calculator(Mat homography, Rect crop_coordinates)
     }
 
     Mat frame_empty;
-    cap.set(CAP_PROP_POS_FRAMES, 347 * 15);
+    cap.set(CAP_PROP_POS_FRAMES, 347 * 15);        //capturing a frame with no vehicles
     cap.read(frame_empty);
 
     cvtColor(frame_empty, frame_empty, cv::COLOR_BGR2GRAY);
-    warpPerspective(frame_empty, frame_empty, homography, frame_empty.size());
+    warpPerspective(frame_empty, frame_empty, homography, frame_empty.size());  //warping,cropping the background frame
     frame_empty = frame_empty(crop_coordinates);
     double fps = cap.get(CAP_PROP_FPS);
 
     cout << "Frames per seconds : " << fps << endl;
 
     Ptr<BackgroundSubtractor> pBackSub;
-    pBackSub = createBackgroundSubtractorMOG2(1, 60, false);
+    pBackSub = createBackgroundSubtractorMOG2(1, 60, false);      //creating the background subtractor using frame_empty as the base
     pBackSub->apply(frame_empty, frame_empty, 1.0);
     cap.set(CAP_PROP_POS_FRAMES, 0);
     namedWindow("cropped", WINDOW_NORMAL); //create a window for displaying cropped image
@@ -149,9 +152,10 @@ void density_calculator(Mat homography, Rect crop_coordinates)
     int total_pixels = frame_empty.rows * frame_empty.cols;
     int framecounter = 0;
     Mat frame, frame_previous;
-    frame_previous = frame_empty;
+    frame_previous = frame_empty;           //previous frame initialization required for dynamic density
     while (true)
     {
+        //this loop iterates over the frames of the video
 
         bool bSuccess = cap.read(frame); // read a new frame from video
 
@@ -160,10 +164,10 @@ void density_calculator(Mat homography, Rect crop_coordinates)
             cout << "Found the end of the video" << endl;
             break;
         }
-        if (framecounter++ % 5 != 0)
+        if (framecounter++ % 5 != 0)   //for 3 fps
             continue;
         cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
-
+        //computing static and dynamic densities by appropriate function calls
         float static_density = compute_static(frame, homography, crop_coordinates, pBackSub, total_pixels);
         pair<float, Mat> dynamic_return = compute_dynamic(frame, frame_previous, homography, crop_coordinates, total_pixels);
         float dynamic_density = dynamic_return.first;
@@ -173,7 +177,7 @@ void density_calculator(Mat homography, Rect crop_coordinates)
             cout << "Esc key is pressed by user. Stopping the video" << endl;
             break;
         }
-
+        //outputting the densities on console as well as an output file
         cout << framecounter << ": " << static_density << " " << dynamic_density << endl;
         fout << framecounter << " " << static_density << " " << dynamic_density << endl;
         frame_previous = dynamic_return.second;
@@ -186,8 +190,6 @@ int main(int argc, char *argv[])
     // reading the two images in grayscale
     Mat im_empty = imread("./assets/empty.jpg", IMREAD_GRAYSCALE);
     Mat im_traffic = imread("./assets/traffic.jpg", IMREAD_GRAYSCALE);
-    // Mat im_empty = imread("./assets/empty.jpg");
-    // Mat im_traffic = imread("./assets/traffic.jpg");
 
     // creating a copy of the first image and displaying it
     Mat im_empty_copy = im_empty.clone();
@@ -216,20 +218,10 @@ int main(int argc, char *argv[])
     warpPerspective(im_empty, im_empty_warped, homography, im_empty.size());
     warpPerspective(im_traffic, im_traffic_warped, homography, im_traffic.size());
 
-    // // displaying the warped image and then destroying its window after user presses any key
-    // imshow("Warped", im_empty_warped);
-    // waitKey(1);
-    // destroyWindow("Warped");
-
     // cropping the warped image
     Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
     im_empty_cropped = im_empty_warped(crop_coordinates);
     im_traffic_cropped = im_traffic_warped(crop_coordinates);
-
-    // // displaying the cropped image
-    // imshow("Cropped", im_empty_cropped);
-    // waitKey(1);
-    // destroyWindow("Cropped");
 
     // writing the warped and cropped images
     imwrite("./results/empty_warped.jpg", im_empty_warped);
@@ -237,6 +229,7 @@ int main(int argc, char *argv[])
     imwrite("./results/traffic_warped.jpg", im_traffic_warped);
     imwrite("./results/traffic_cropped.jpg", im_traffic_cropped);
 
+    //calling the function for static and dynamic density calculations
     density_calculator(homography, crop_coordinates);
     return 0;
 }
