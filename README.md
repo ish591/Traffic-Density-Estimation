@@ -37,7 +37,13 @@ Alternatively, you can run
 # you can also provide the relative or absolute path to a video file to run it
 ./build/main.out assets/trafficvideo.mp4
 ```
+### Graph plotting
 
+```bash
+make graph 
+# plots the graphs of static and dynamic queue densities as functions of time using matplotlib of python.
+# The densities are taken from a text file named out.txt, and the graph is stored as a png image in the results directory.
+```
 ### Additional Commands
 
 A few additional make rules:
@@ -45,7 +51,6 @@ A few additional make rules:
 ```bash
 make clean      # To clean the build and runtime files run.
 make help       # To see all make options.
-make graph      # Plot graph with results in out.txt
 make download   # To download the video and store is in the assets directory
 ```
 
@@ -66,7 +71,7 @@ An incorrect make rule helps the user by directing them to the 'make help' comma
 - Shows the marked points on the image as the user selects them for convenience.
 - Points can be selected in any order and are mapped appropriately.
 - Calculates the warp destination coordinates dynamically to incorporate different road sizes in an attempt to maintain the aspect ratio.
-- Displays cropped frame as well as the computedstatic and dynamic masks.
+- Displays cropped frame as well as the computed static and dynamic masks.
 - Automated commands for easier evaluation.
 
 ## Developers
