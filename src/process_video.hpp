@@ -4,28 +4,31 @@
 using namespace std;
 using namespace cv;
 
-void transform_video(VideoCapture cap, Mat homography, Rect crop_coordinates)
+void transform_video(VideoCapture cap, Mat homography, Rect crop_coordinates, Mat frame_empty)
 {
-    // VideoWriter video("trafficvideo_processed.avi", cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 10, Size(crop_coordinates.width, crop_coordinates.height));
-    // Mat frame;
-    // while (true)
-    // {
-    //     //this loop iterates over the frames of the video
+    VideoWriter video("trafficvideo_processed.avi", VideoWriter::fourcc('M', 'J', 'P', 'G'), 10, frame_empty.size());
 
-    //     bool bSuccess = cap.read(frame); // read a new frame from video
-    //     if (bSuccess == false)
-    //     {
-    //         cout << "Found the end of the video" << endl;
-    //         break;
-    //     }
-    //     cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
-    //     //warping ,cropping the background frame
-    //     warpPerspective(frame, frame, homography, frame.size());
-    //     frame = frame(crop_coordinates);
-    //     video.write(frame);
-    // }
+    while (true)
+    {
+        Mat frame;
+        // Capture frame-by-frame
+        cap >> frame;
+        // If the frame is empty, break immediately
+        if (frame.empty())
+            break;
 
-    // maybe return a VideoCapture object here.
+        // Write the frame into the file 'outcpp.avi'
+        cvtColor(frame, frame, COLOR_BGR2GRAY);
+        warpPerspective(frame, frame, homography, frame.size());
+        frame = frame(crop_coordinates);
+        video.write(frame);
+
+        // Press  ESC on keyboard to  exit
+        char c = (char)waitKey(1);
+        if (c == 27)
+            break;
+    }
+    video.release();
 }
 
 Mat get_empty_frame(VideoCapture cap, int frame_num, Mat homography, Rect crop_coordinates)
