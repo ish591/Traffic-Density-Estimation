@@ -34,7 +34,7 @@ pair<float, Mat> compute_dynamic(Mat frame, Mat frame_cropped_previous, Mat homo
     cvtColor(dynamic_mat_color, dynamic_mat_bw, COLOR_BGR2GRAY);                  //converting into a grayscale matrix
     dynamic_mat_bw = dynamic_mat_bw > 12;                                         //threshold to convert grayscal to pure black-white image
     float dynamic_density = ((float)countNonZero(dynamic_mat_bw)) / total_pixels; //computation of dynamic density
-    imshow("dynamicMasked", dynamic_mat_color);
+    //imshow("dynamicMasked", dynamic_mat_color);
     return {dynamic_density, frame_cropped_next};
 }
 
@@ -47,25 +47,32 @@ float compute_static(Mat frame, Mat homography, Rect crop_coordinates, Ptr<Backg
     pBackSub->apply(frame_cropped, frame_mask, 0.0); //apply background mask with 0 learning rate to keep static empty background
 
     //show the frame in the created window
-    imshow("cropped", frame_cropped);
-    imshow("masked", frame_mask);
+    // imshow("cropped", frame_cropped);
+    // imshow("masked", frame_mask);
     float static_density = ((float)countNonZero(frame_mask)) / total_pixels; //computing static queue density
     return static_density;
 }
 
 //function called from main to compute both the densities
-void density_calculator(VideoCapture cap, Mat homography, Rect crop_coordinates, Mat frame_empty, int skip, int start_frame, int end_frame)
+void density_calculator(string video_filename, Mat homography, Rect crop_coordinates, Mat frame_empty, int skip, int start_frame, int end_frame, string out_filename)
 {
+    VideoCapture cap(video_filename);
+    if (cap.isOpened() == false)
+    {
+        cout << "Cannot open the video file!" << endl;
+        cin.get(); // wait for any key press
+        return;
+    }
     //opening the output file
     ofstream fout;
-    fout.open("./results/out.txt", std::ofstream::out | std::ofstream::trunc);
+    fout.open("./results/" + out_filename + ".txt", std::ofstream::out | std::ofstream::trunc);
 
     Ptr<BackgroundSubtractor> pBackSub;
     pBackSub = createBackgroundSubtractorMOG2(1, 60, false); //creating the background subtractor using frame_empty as the base
     pBackSub->apply(frame_empty, frame_empty, 1.0);
 
-    namedWindow("cropped", WINDOW_NORMAL); //create a window for displaying cropped image
-    namedWindow("masked", WINDOW_NORMAL);  //create a window for displaying the mask
+    // namedWindow("cropped", WINDOW_NORMAL); //create a window for displaying cropped image
+    // namedWindow("masked", WINDOW_NORMAL);  //create a window for displaying the mask
 
     int total_pixels = frame_empty.rows * frame_empty.cols;
     int framecounter = start_frame;
@@ -73,7 +80,7 @@ void density_calculator(VideoCapture cap, Mat homography, Rect crop_coordinates,
     Mat frame, frame_previous;
 
     frame_previous = frame_empty; //previous frame initialization required for dynamic density
-    cap.set(CAP_PROP_POS_FRAMES, 0);
+    cap.set(CAP_PROP_POS_FRAMES, start_frame);
 
     while (framecounter < end_frame)
     {

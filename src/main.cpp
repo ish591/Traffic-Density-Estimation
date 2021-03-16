@@ -9,8 +9,9 @@ Ishaan Singh : 2019CS10359
 #include <fstream>
 #include <utility>
 
-#include "density_calculator.hpp"
+// #include "density_calculator.hpp"
 #include "process_video.hpp"
+#include "analysis_methods.hpp"
 
 using namespace std;
 using namespace cv;
@@ -75,6 +76,7 @@ vector<Point2f> get_dst_points(vector<Point2f> pts_src)
 
 int main(int argc, char *argv[])
 {
+    setNumThreads(1);
     string video_filename = "./assets/trafficvideo.mp4";
     if (argc > 1)
         video_filename = argv[1];
@@ -111,7 +113,7 @@ int main(int argc, char *argv[])
     //pts_src = get_src_points();
 
     pts_src.push_back(Point2f(961, 230));
-    pts_src.push_back(Point2f(574, 1063));
+    pts_src.push_back(Point2f(324, 1063));
     pts_src.push_back(Point2f(1571, 1065));
     pts_src.push_back(Point2f(1288, 224));
 
@@ -137,15 +139,19 @@ int main(int argc, char *argv[])
     // imwrite("./results/traffic_warped.jpg", im_traffic_warped);
     // imwrite("./results/traffic_cropped.jpg", im_traffic_cropped);
 
-    // transform_video(cap, homography, crop_coordinates);
-
     Mat frame_empty = get_empty_frame(cap, 347 * 15, homography, crop_coordinates);
+    // transform_video(cap, homography, crop_coordinates, frame_empty);
 
     int total_frames = cap.get(CAP_PROP_FRAME_COUNT);
     double fps = cap.get(CAP_PROP_FPS);
     cout << "Number of frames: " << total_frames << endl;
     cout << "Frames per seconds : " << fps << endl;
 
-    density_calculator(cap, homography, crop_coordinates, frame_empty, 5, 0, total_frames);
+    method0(video_filename, homography, crop_coordinates, frame_empty, total_frames);
+    method4(video_filename, homography, crop_coordinates, frame_empty, total_frames, 4);
+    method5(video_filename, homography, crop_coordinates, frame_empty, total_frames, 4);
+    // density_calculator(video_filename, homography, crop_coordinates, frame_empty, 5, 0, total_frames, "out");
+    //test_method(video_filename, homography, crop_coordinates, frame_empty, total_frames, 4);
+
     return 0;
 }
