@@ -10,6 +10,7 @@ Ishaan Singh : 2019CS10359
 #include <utility>
 
 #include "density_calculator.hpp"
+#include "process_video.hpp"
 
 using namespace std;
 using namespace cv;
@@ -24,6 +25,7 @@ void clickEvent(int event, int x, int y, int flags, void *params)
     Mat *im_empty = (Mat *)params;
     if (event == EVENT_LBUTTONDOWN)
     {
+        cout << x << " " << y << endl;
         circle(*im_empty, Point2f(x, y), 9, Scalar(20, 20, 20), -1); // to display a circular dot at points of selection
         selected_pts.push_back({x, y});
         imshow("Empty", *im_empty);
@@ -86,49 +88,64 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    // reading the two images in grayscale
-    Mat im_empty = imread("./assets/empty.jpg", IMREAD_GRAYSCALE);
-    Mat im_traffic = imread("./assets/traffic.jpg", IMREAD_GRAYSCALE);
+    // // reading the two images in grayscale
+    // Mat im_empty = imread("./assets/empty.jpg", IMREAD_GRAYSCALE);
+    // Mat im_traffic = imread("./assets/traffic.jpg", IMREAD_GRAYSCALE);
 
-    // creating a copy of the first image and displaying it
-    Mat im_empty_copy = im_empty.clone();
-    imshow("Empty", im_empty_copy);
+    // // creating a copy of the first image and displaying it
+    // Mat im_empty_copy = im_empty.clone();
+    // imshow("Empty", im_empty_copy);
 
-    // callback function is executed while the user is selecting the four points
-    while (selected_pts.size() < 4)
-    {
-        setMouseCallback("Empty", clickEvent, (void *)&im_empty_copy);
-        waitKey(200);
-    }
-    // destroys the window of the initial image
-    destroyWindow("Empty");
+    // // callback function is executed while the user is selecting the four points
+    // while (selected_pts.size() < 4)
+    // {
+    //     setMouseCallback("Empty", clickEvent, (void *)&im_empty_copy);
+    //     waitKey(200);
+    // }
+    // // destroys the window of the initial image
+    // destroyWindow("Empty");
 
     // getting source and destination points by calling appropriate functions
+
     vector<Point2f> pts_src, pts_dst;
-    pts_src = get_src_points();
+    //pts_src = get_src_points();
+
+    pts_src.push_back(Point2f(961, 230));
+    pts_src.push_back(Point2f(574, 1063));
+    pts_src.push_back(Point2f(1571, 1065));
+    pts_src.push_back(Point2f(1288, 224));
+
     pts_dst = get_dst_points(pts_src);
     waitKey(100);
 
     // finding the homography of the image using openCv functions
     Mat homography = findHomography(pts_src, pts_dst);
 
-    Mat im_empty_warped, im_empty_cropped, im_traffic_warped, im_traffic_cropped;
+    // Mat im_empty_warped, im_empty_cropped, im_traffic_warped, im_traffic_cropped;
 
-    warpPerspective(im_empty, im_empty_warped, homography, im_empty.size());
-    warpPerspective(im_traffic, im_traffic_warped, homography, im_traffic.size());
+    // warpPerspective(im_empty, im_empty_warped, homography, im_empty.size());
+    // warpPerspective(im_traffic, im_traffic_warped, homography, im_traffic.size());
 
-    // cropping the warped image
+    // // cropping the warped image
     Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
-    im_empty_cropped = im_empty_warped(crop_coordinates);
-    im_traffic_cropped = im_traffic_warped(crop_coordinates);
+    // im_empty_cropped = im_empty_warped(crop_coordinates);
+    // im_traffic_cropped = im_traffic_warped(crop_coordinates);
 
-    // writing the warped and cropped images
-    imwrite("./results/empty_warped.jpg", im_empty_warped);
-    imwrite("./results/empty_cropped.jpg", im_empty_cropped);
-    imwrite("./results/traffic_warped.jpg", im_traffic_warped);
-    imwrite("./results/traffic_cropped.jpg", im_traffic_cropped);
+    // // writing the warped and cropped images
+    // imwrite("./results/empty_warped.jpg", im_empty_warped);
+    // imwrite("./results/empty_cropped.jpg", im_empty_cropped);
+    // imwrite("./results/traffic_warped.jpg", im_traffic_warped);
+    // imwrite("./results/traffic_cropped.jpg", im_traffic_cropped);
 
-    //calling the function for static and dynamic density calculations
-    density_calculator(cap, homography, crop_coordinates);
+    // transform_video(cap, homography, crop_coordinates);
+
+    Mat frame_empty = get_empty_frame(cap, 347 * 15, homography, crop_coordinates);
+
+    int total_frames = cap.get(CAP_PROP_FRAME_COUNT);
+    double fps = cap.get(CAP_PROP_FPS);
+    cout << "Number of frames: " << total_frames << endl;
+    cout << "Frames per seconds : " << fps << endl;
+
+    density_calculator(cap, homography, crop_coordinates, frame_empty, 5, 0, total_frames);
     return 0;
 }

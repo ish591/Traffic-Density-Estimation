@@ -53,37 +53,29 @@ float compute_static(Mat frame, Mat homography, Rect crop_coordinates, Ptr<Backg
     return static_density;
 }
 
-void density_calculator(VideoCapture cap, Mat homography, Rect crop_coordinates)
 //function called from main to compute both the densities
+void density_calculator(VideoCapture cap, Mat homography, Rect crop_coordinates, Mat frame_empty, int skip, int start_frame, int end_frame)
 {
     //opening the output file
     ofstream fout;
     fout.open("./results/out.txt", std::ofstream::out | std::ofstream::trunc);
 
-    Mat frame_empty;
-    cap.set(CAP_PROP_POS_FRAMES, 347 * 15); //capturing a frame with no vehicles
-    cap.read(frame_empty);
-
-    cvtColor(frame_empty, frame_empty, cv::COLOR_BGR2GRAY);
-    warpPerspective(frame_empty, frame_empty, homography, frame_empty.size()); //warping,cropping the background frame
-    frame_empty = frame_empty(crop_coordinates);
-    double fps = cap.get(CAP_PROP_FPS);
-
-    cout << "Frames per seconds : " << fps << endl;
-
     Ptr<BackgroundSubtractor> pBackSub;
     pBackSub = createBackgroundSubtractorMOG2(1, 60, false); //creating the background subtractor using frame_empty as the base
     pBackSub->apply(frame_empty, frame_empty, 1.0);
-    cap.set(CAP_PROP_POS_FRAMES, 0);
+
     namedWindow("cropped", WINDOW_NORMAL); //create a window for displaying cropped image
     namedWindow("masked", WINDOW_NORMAL);  //create a window for displaying the mask
-    cap.set(CAP_PROP_POS_FRAMES, 0);
 
     int total_pixels = frame_empty.rows * frame_empty.cols;
-    int framecounter = 0;
+    int framecounter = start_frame;
+
     Mat frame, frame_previous;
+
     frame_previous = frame_empty; //previous frame initialization required for dynamic density
-    while (true)
+    cap.set(CAP_PROP_POS_FRAMES, 0);
+
+    while (framecounter < end_frame)
     {
         //this loop iterates over the frames of the video
 
@@ -94,7 +86,7 @@ void density_calculator(VideoCapture cap, Mat homography, Rect crop_coordinates)
             cout << "Found the end of the video" << endl;
             break;
         }
-        if (framecounter++ % 5 != 0) //for 3 fps
+        if (framecounter++ % skip != 0) // skipping some frames
             continue;
         cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
         //computing static and dynamic densities by appropriate function calls
