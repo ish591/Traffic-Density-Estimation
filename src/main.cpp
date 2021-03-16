@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
     method4(video_filename, homography, crop_coordinates, frame_empty, total_frames, 4);
     method5(video_filename, homography, crop_coordinates, frame_empty, total_frames, 4);
     // density_calculator(video_filename, homography, crop_coordinates, frame_empty, 5, 0, total_frames, "out");
-    //test_method(video_filename, homography, crop_coordinates, frame_empty, total_frames, 4);
+    // test_method(video_filename, homography, crop_coordinates, frame_empty, total_frames, 4);
 
     return 0;
 }
