@@ -34,7 +34,7 @@ pair<float, Mat> compute_dynamic(Mat frame, Mat frame_cropped_previous, Mat homo
     cvtColor(dynamic_mat_color, dynamic_mat_bw, COLOR_BGR2GRAY);                  //converting into a grayscale matrix
     dynamic_mat_bw = dynamic_mat_bw > 12;                                         //threshold to convert grayscal to pure black-white image
     float dynamic_density = ((float)countNonZero(dynamic_mat_bw)) / total_pixels; //computation of dynamic density
-    imshow("dynamicMasked", dynamic_mat_color);
+    // imshow("dynamicMasked", dynamic_mat_color);
     return {dynamic_density, frame_cropped_next};
 }
 
@@ -45,45 +45,49 @@ float compute_static(Mat frame, Mat homography, Rect crop_coordinates, Ptr<Backg
     warpPerspective(frame, frame_warped, homography, frame.size()); //warping, cropping and applying background subtraction
     frame_cropped = frame_warped(crop_coordinates);
     pBackSub->apply(frame_cropped, frame_mask, 0.0); //apply background mask with 0 learning rate to keep static empty background
+    // Mat frame_bg;
+    // pBackSub->getBackgroundImage(frame_bg);
+    // imshow("bg", frame_bg);
 
-    //show the frame in the created window
-    imshow("cropped", frame_cropped);
-    imshow("masked", frame_mask);
+    // //show the frame in the created window
+    // imshow("cropped", frame_cropped);
+    // imshow("masked", frame_mask);
     float static_density = ((float)countNonZero(frame_mask)) / total_pixels; //computing static queue density
     return static_density;
 }
 
-void density_calculator(VideoCapture cap, Mat homography, Rect crop_coordinates)
 //function called from main to compute both the densities
+void density_calculator(string video_filename, Mat homography, Rect crop_coordinates, Mat frame_empty, int skip, int start_frame, int end_frame, string out_filename)
 {
+    VideoCapture cap(video_filename);
+    if (cap.isOpened() == false)
+    {
+        cout << "Cannot open the video file!" << endl;
+        cin.get(); // wait for any key press
+        return;
+    }
     //opening the output file
     ofstream fout;
-    fout.open("./results/out.txt", std::ofstream::out | std::ofstream::trunc);
+    fout.open("./results/" + out_filename + ".txt", std::ofstream::out | std::ofstream::trunc);
 
-    Mat frame_empty;
-    cap.set(CAP_PROP_POS_FRAMES, 347 * 15); //capturing a frame with no vehicles
-    cap.read(frame_empty);
-
-    cvtColor(frame_empty, frame_empty, cv::COLOR_BGR2GRAY);
-    warpPerspective(frame_empty, frame_empty, homography, frame_empty.size()); //warping,cropping the background frame
-    frame_empty = frame_empty(crop_coordinates);
-    double fps = cap.get(CAP_PROP_FPS);
-
-    cout << "Frames per seconds : " << fps << endl;
-
+    Mat frame_empty_processed;
     Ptr<BackgroundSubtractor> pBackSub;
     pBackSub = createBackgroundSubtractorMOG2(1, 60, false); //creating the background subtractor using frame_empty as the base
-    pBackSub->apply(frame_empty, frame_empty, 1.0);
-    cap.set(CAP_PROP_POS_FRAMES, 0);
-    namedWindow("cropped", WINDOW_NORMAL); //create a window for displaying cropped image
-    namedWindow("masked", WINDOW_NORMAL);  //create a window for displaying the mask
-    cap.set(CAP_PROP_POS_FRAMES, 0);
+    pBackSub->apply(frame_empty, frame_empty_processed, 1.0);
+
+    // namedWindow("cropped", WINDOW_NORMAL); //create a window for displaying cropped image
+    // namedWindow("masked", WINDOW_NORMAL);  //create a window for displaying the mask
+    // namedWindow("bg", WINDOW_NORMAL);      //create a window for displaying the background mask
 
     int total_pixels = frame_empty.rows * frame_empty.cols;
-    int framecounter = 0;
+    int framecounter = start_frame;
+
     Mat frame, frame_previous;
-    frame_previous = frame_empty; //previous frame initialization required for dynamic density
-    while (true)
+
+    frame_previous = frame_empty_processed; //previous frame initialization required for dynamic density
+    cap.set(CAP_PROP_POS_FRAMES, start_frame);
+
+    while (framecounter < end_frame)
     {
         //this loop iterates over the frames of the video
 
@@ -94,7 +98,7 @@ void density_calculator(VideoCapture cap, Mat homography, Rect crop_coordinates)
             cout << "Found the end of the video" << endl;
             break;
         }
-        if (framecounter++ % 5 != 0) //for 3 fps
+        if (framecounter++ % skip != 0) // skipping some frames
             continue;
         cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
         //computing static and dynamic densities by appropriate function calls
