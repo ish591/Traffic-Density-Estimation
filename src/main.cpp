@@ -147,9 +147,17 @@ int main(int argc, char *argv[])
     cout << "Number of frames: " << total_frames << endl;
     cout << "Frames per seconds : " << fps << endl;
 
-    method0(video_filename, homography, crop_coordinates, frame_empty, total_frames);
-    method4(video_filename, homography, crop_coordinates, frame_empty, total_frames, 4);
-    method5(video_filename, homography, crop_coordinates, frame_empty, total_frames, 4);
+    //method0(video_filename, homography, crop_coordinates, frame_empty, total_frames,1920,1088);
+    
+    //method1(video_filename, homography, crop_coordinates, frame_empty, total_frames, 2);
+    bonus_method(video_filename, homography, crop_coordinates, frame_empty, total_frames);
+    //method2(video_filename, pts_src, pts_dst, total_frames, 1400, 800, cap);
+    
+    //method3(video_filename, homography, crop_coordinates, frame_empty, total_frames, 4);
+    
+    //method4(video_filename, homography, crop_coordinates, frame_empty, total_frames, 4);
+    pair<float,float> errors = compute_error ("./results/out_0.txt", "./results/out_bonus.txt", total_frames);
+    cout<<errors.first<<" "<<errors.second<<endl;
     // density_calculator(video_filename, homography, crop_coordinates, frame_empty, 5, 0, total_frames, "out");
     // test_method(video_filename, homography, crop_coordinates, frame_empty, total_frames, 4);
 
