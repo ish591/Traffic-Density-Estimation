@@ -8,43 +8,69 @@
 using namespace std;
 using namespace cv;
 
-void method0(string video_filename, Mat homography, Rect crop_coordinates, Mat frame_empty, int total_frames)
+void method0(string video_filename, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames)
 {
+    Mat homography = findHomography(pts_src, pts_dst);
+    Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
+
+    warpPerspective(frame_empty, frame_empty, homography, frame_empty.size()); //warping,cropping the background frame
+    frame_empty = frame_empty(crop_coordinates);
+
     density_calculator(video_filename, homography, crop_coordinates, frame_empty, BASE_SKIP, 0, total_frames, "out_0", 1920, 1088, 0);
 }
-void method1(string video_filename, Mat homography, Rect crop_coordinates, Mat frame_empty, int total_frames, int skip_factor)
+
+void method1(string video_filename, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, int skip_factor)
 {
+    Mat homography = findHomography(pts_src, pts_dst);
+    Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
+
+    warpPerspective(frame_empty, frame_empty, homography, frame_empty.size()); //warping,cropping the background frame
+    frame_empty = frame_empty(crop_coordinates);
+
     //process frame N, then N+skip_frames ..
-    density_calculator(video_filename, homography, crop_coordinates, frame_empty, skip_factor * BASE_SKIP ,0, total_frames,"out_1_skipped", 1920, 1088, 0);
+    density_calculator(video_filename, homography, crop_coordinates, frame_empty, skip_factor * BASE_SKIP, 0, total_frames, "out_1_skipped", 1920, 1088, 0);
     //for intermediate frames use value of N
-     ofstream fout("./results/out_1.txt");
+    ofstream fout("./results/out_1.txt");
     ifstream fin("./results/out_1_skipped.txt");
     int a;
     float b, c;
     while (fin >> a)
     {
         fin >> b >> c;
-        for(int i=a;i<=min(a+skip_factor * BASE_SKIP - 1,total_frames);i++){
-        fout << i << " " << b << " " << c << endl;
+        for (int i = a; i <= min(a + skip_factor * BASE_SKIP - 1, total_frames); i++)
+        {
+            fout << i << " " << b << " " << c << endl;
         }
     }
     fin.close();
 }
-void method2(string video_filename, vector<Point2f> pts_src, vector<Point2f> pts_dst, int total_frames, int width, int height, VideoCapture cap){
-    for(int i = 0;i < 4; i++){
-        pts_src[i].x = ((pts_src[i].x)*width)/1920;
-        pts_src[i].y = ((pts_src[i].y)*height)/1088;
-        pts_dst[i].x = ((pts_dst[i].x)*width)/1920;
-        pts_dst[i].y = ((pts_dst[i].y)*height)/1088;
+
+void method2(string video_filename, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, int width, int height)
+{
+
+    for (int i = 0; i < 4; i++)
+    {
+        pts_src[i].x = ((pts_src[i].x) * width) / 1920;
+        pts_src[i].y = ((pts_src[i].y) * height) / 1088;
+        pts_dst[i].x = ((pts_dst[i].x) * width) / 1920;
+        pts_dst[i].y = ((pts_dst[i].y) * height) / 1088;
     }
-    Mat homography = findHomography (pts_src, pts_dst);
+    Mat homography = findHomography(pts_src, pts_dst);
     Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
-    Mat frame_empty = get_empty_frame(cap, 347 * 15, homography, crop_coordinates);
+
+    warpPerspective(frame_empty, frame_empty, homography, frame_empty.size()); //warping,cropping the background frame
+    frame_empty = frame_empty(crop_coordinates);
+
     density_calculator(video_filename, homography, crop_coordinates, frame_empty, BASE_SKIP, 0, total_frames, "out_2", width, height, 0);
 }
 
-void method3(string video_filename, Mat homography, Rect crop_coordinates, Mat frame_empty, int total_frames, int num_threads)
+void method3(string video_filename, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, int num_threads)
 {
+    Mat homography = findHomography(pts_src, pts_dst);
+    Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
+    warpPerspective(frame_empty, frame_empty, homography, frame_empty.size()); //warping,cropping the background frame
+    frame_empty = frame_empty(crop_coordinates);
+
     if (num_threads > 5)
         num_threads = 5;
     vector<Rect> crop_coord;
@@ -99,8 +125,14 @@ void method3(string video_filename, Mat homography, Rect crop_coordinates, Mat f
     }
 }
 
-void method4(string video_filename, Mat homography, Rect crop_coordinates, Mat frame_empty, int total_frames, int num_threads)
+void method4(string video_filename, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, int num_threads)
 {
+    Mat homography = findHomography(pts_src, pts_dst);
+    Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
+
+    warpPerspective(frame_empty, frame_empty, homography, frame_empty.size()); //warping,cropping the background frame
+    frame_empty = frame_empty(crop_coordinates);
+
     if (num_threads > 5)
         num_threads = 5;
     int frame_limits[num_threads + 1];
@@ -111,7 +143,7 @@ void method4(string video_filename, Mat homography, Rect crop_coordinates, Mat f
     vector<thread> threads;
     for (int i = 0; i < num_threads; i++)
     {
-        threads.push_back(thread(density_calculator, video_filename, homography, crop_coordinates, frame_empty, BASE_SKIP, frame_limits[i], frame_limits[i + 1], "out_4_" + to_string(i), 1920, 1088,0));
+        threads.push_back(thread(density_calculator, video_filename, homography, crop_coordinates, frame_empty, BASE_SKIP, frame_limits[i], frame_limits[i + 1], "out_4_" + to_string(i), 1920, 1088, 0));
     }
     for (int i = 0; i < num_threads; i++)
         threads[i].join();
@@ -129,10 +161,24 @@ void method4(string video_filename, Mat homography, Rect crop_coordinates, Mat f
     }
 }
 
-void bonus_method(string video_filename, Mat homography, Rect crop_coordinates, Mat frame_empty, int total_frames){
+void bonus_method(string video_filename, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, bool sparse)
+{
+    Mat homography = findHomography(pts_src, pts_dst);
+    Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
+
+    warpPerspective(frame_empty, frame_empty, homography, frame_empty.size()); //warping,cropping the background frame
+    frame_empty = frame_empty(crop_coordinates);
+
     //time_t start,end;
     //time(&start);
-    density_calculator(video_filename, homography, crop_coordinates, frame_empty, BASE_SKIP, 0, total_frames, "out_bonus", 1920, 1088, 1);
+    if (!sparse)
+    {
+        density_calculator(video_filename, homography, crop_coordinates, frame_empty, BASE_SKIP, 0, total_frames, "out_bonus_0", 1920, 1088, 0);
+    }
+    else
+    {
+        density_calculator(video_filename, homography, crop_coordinates, frame_empty, BASE_SKIP, 0, total_frames, "out_bonus_1", 1920, 1088, 1);
+    }
     // last parameter is a boolean, 1 stands for sparse
     //performs sparse optical flow
     //time(&end);
@@ -141,25 +187,55 @@ void bonus_method(string video_filename, Mat homography, Rect crop_coordinates, 
     //cout<<" seconds "<<endl;
 }
 
-pair<float,float> compute_error(string base_file, string compared_file, int total_frames){
+pair<float, float> compute_error(string base_file, string compared_file, int total_frames)
+{
+
     ifstream fin1(base_file);
     ifstream fin2(compared_file);
-    int a1,a2;
-    float b,c,b1,c1;
+    int a1, a2;
+    float b, c, b1, c1;
     float queue_error = 0.0;
     float dynamic_error = 0.0;
-    while(fin1 >> a1)
+    while (fin1 >> a1)
     {
         fin1 >> b >> c;
         fin2 >> a2 >> b1 >> c1;
-        queue_error+= (b-b1)*(b-b1);
-        dynamic_error+= (c-c1)*(c-c1);
+        queue_error += (b - b1) * (b - b1);
+        dynamic_error += (c - c1) * (c - c1);
     }
-    queue_error = (float) sqrt(queue_error)/total_frames;
-    dynamic_error = (float) sqrt(dynamic_error) /total_frames;
+    queue_error = (float)sqrt(queue_error) / total_frames;
+    dynamic_error = (float)sqrt(dynamic_error) / total_frames;
     return {queue_error, dynamic_error};
 }
-/*void call_method(int number, string){
-    
+
+void call_method(int method_number, string video_filename, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, int method_arg1 = 0, int method_arg2 = 0)
+{
+    //time_t start,end;
+    //time(&start);
+    switch (method_number)
+    {
+    case 0:
+        method0(video_filename, pts_src, pts_dst, frame_empty, total_frames);
+        break;
+    case 1:
+        method1(video_filename, pts_src, pts_dst, frame_empty, total_frames, method_arg1);
+        break;
+    case 2:
+        method2(video_filename, pts_src, pts_dst, frame_empty, total_frames, method_arg1, method_arg2);
+        break;
+    case 3:
+        method3(video_filename, pts_src, pts_dst, frame_empty, total_frames, method_arg1);
+        break;
+    case 4:
+        method4(video_filename, pts_src, pts_dst, frame_empty, total_frames, method_arg1);
+        break;
+    case 5:
+        bonus_method(video_filename, pts_src, pts_dst, frame_empty, total_frames, method_arg1);
+        break;
+    }
+
+    //     time(&end);
+    //     double total_time = double (end- start);
+    //     cout << "The time taken by the program is: "<< fixed << total_time << setprecision(5);
+    //     cout<<" seconds "<<endl;
 }
-*/

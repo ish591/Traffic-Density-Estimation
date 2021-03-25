@@ -31,15 +31,14 @@ void transform_video(VideoCapture cap, Mat homography, Rect crop_coordinates, Ma
     video.release();
 }
 
-Mat get_empty_frame(VideoCapture cap, int frame_num, Mat homography, Rect crop_coordinates)
+Mat get_empty_frame(VideoCapture cap, int frame_num)
 {
     Mat frame_empty;
     cap.set(CAP_PROP_POS_FRAMES, frame_num); //capturing a frame with no vehicles
     cap.read(frame_empty);
 
     cvtColor(frame_empty, frame_empty, cv::COLOR_BGR2GRAY);
-    warpPerspective(frame_empty, frame_empty, homography, frame_empty.size()); //warping,cropping the background frame
-    frame_empty = frame_empty(crop_coordinates);
+
     cap.set(CAP_PROP_POS_FRAMES, 0);
     return frame_empty;
 }

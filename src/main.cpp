@@ -89,23 +89,23 @@ int main(int argc, char *argv[])
         cin.get(); // wait for any key press
         return 0;
     }
-
+    ifstream fin("./src/input.txt");
     // // reading the two images in grayscale
-    // Mat im_empty = imread("./assets/empty.jpg", IMREAD_GRAYSCALE);
-    // Mat im_traffic = imread("./assets/traffic.jpg", IMREAD_GRAYSCALE);
+    Mat im_empty = imread("./assets/empty.jpg", IMREAD_GRAYSCALE);
+    Mat im_traffic = imread("./assets/traffic.jpg", IMREAD_GRAYSCALE);
 
     // // creating a copy of the first image and displaying it
     // Mat im_empty_copy = im_empty.clone();
     // imshow("Empty", im_empty_copy);
 
     // // callback function is executed while the user is selecting the four points
-    // while (selected_pts.size() < 4)
-    // {
-    //     setMouseCallback("Empty", clickEvent, (void *)&im_empty_copy);
-    //     waitKey(200);
-    // }
+    //while (selected_pts.size() < 4)
+    //{
+    // setMouseCallback("Empty", clickEvent, (void *)&im_empty_copy);
+    // waitKey(200);
+    //}
     // // destroys the window of the initial image
-    // destroyWindow("Empty");
+    //destroyWindow("Empty");
 
     // getting source and destination points by calling appropriate functions
 
@@ -116,12 +116,16 @@ int main(int argc, char *argv[])
     pts_src.push_back(Point2f(324, 1063));
     pts_src.push_back(Point2f(1571, 1065));
     pts_src.push_back(Point2f(1288, 224));
+    //pts_src.push_back(Point2f(967, 229));
+    //pts_src.push_back(Point2f(280, 1045));
+    //pts_src.push_back(Point2f(1517, 1043));
+    //pts_src.push_back(Point2f(1268, 220));
 
     pts_dst = get_dst_points(pts_src);
     waitKey(100);
 
     // finding the homography of the image using openCv functions
-    Mat homography = findHomography(pts_src, pts_dst);
+    // Mat homography = findHomography(pts_src, pts_dst);
 
     // Mat im_empty_warped, im_empty_cropped, im_traffic_warped, im_traffic_cropped;
 
@@ -129,7 +133,7 @@ int main(int argc, char *argv[])
     // warpPerspective(im_traffic, im_traffic_warped, homography, im_traffic.size());
 
     // // cropping the warped image
-    Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
+    // Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
     // im_empty_cropped = im_empty_warped(crop_coordinates);
     // im_traffic_cropped = im_traffic_warped(crop_coordinates);
 
@@ -139,27 +143,17 @@ int main(int argc, char *argv[])
     // imwrite("./results/traffic_warped.jpg", im_traffic_warped);
     // imwrite("./results/traffic_cropped.jpg", im_traffic_cropped);
 
-    Mat frame_empty = get_empty_frame(cap, 347 * 15, homography, crop_coordinates);
+    Mat frame_empty = get_empty_frame(cap, 347 * 15);
+
     // transform_video(cap, homography, crop_coordinates, frame_empty);
 
+    cout << frame_empty.size();
     int total_frames = cap.get(CAP_PROP_FRAME_COUNT);
     double fps = cap.get(CAP_PROP_FPS);
     cout << "Number of frames: " << total_frames << endl;
     cout << "Frames per seconds : " << fps << endl;
 
-    //method0(video_filename, homography, crop_coordinates, frame_empty, total_frames,1920,1088);
-    
-    //method1(video_filename, homography, crop_coordinates, frame_empty, total_frames, 2);
-    bonus_method(video_filename, homography, crop_coordinates, frame_empty, total_frames);
-    //method2(video_filename, pts_src, pts_dst, total_frames, 1400, 800, cap);
-    
-    //method3(video_filename, homography, crop_coordinates, frame_empty, total_frames, 4);
-    
-    //method4(video_filename, homography, crop_coordinates, frame_empty, total_frames, 4);
-    pair<float,float> errors = compute_error ("./results/out_0.txt", "./results/out_bonus.txt", total_frames);
-    cout<<errors.first<<" "<<errors.second<<endl;
-    // density_calculator(video_filename, homography, crop_coordinates, frame_empty, 5, 0, total_frames, "out");
-    // test_method(video_filename, homography, crop_coordinates, frame_empty, total_frames, 4);
+    call_method(0, video_filename, pts_src, pts_dst, frame_empty, total_frames, 0, 0);
 
     return 0;
 }
