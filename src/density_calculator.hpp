@@ -63,10 +63,10 @@ pair<float, vector<Point2f>> compute_sparse_flow(Mat frame_cropped_previous, Mat
     add(colored_next_frame, mask, img);
     imshow("Frame", img);
     waitKey(10);
-    ans = (float)ans / 2200.0;
+    ans = (float)ans / 5000.0;
     //if (new_points.size()==0){new_points = p0;}
     vector<Point2f> p_next;
-    goodFeaturesToTrack(frame_cropped_next, p_next, 100, 0.5, 7, Mat(), 7, false, 0.04);
+    goodFeaturesToTrack(frame_cropped_next, p_next, 100, 0.3, 7, Mat(), 7, false, 0.04);
     if (p_next.size() == 0)
     {
         return {ans, p0};
@@ -159,7 +159,7 @@ void density_calculator(string video_filename, Mat homography, Rect crop_coordin
     }
 
     vector<Point2f> p0, p1; //stores the corner points for sparse optical flow
-    goodFeaturesToTrack(frame_empty, p0, 100, 0.5, 7, Mat(), 7, false, 0.04);
+    goodFeaturesToTrack(frame_empty, p0, 100, 0.3, 7, Mat(), 7, false, 0.04);
     //cout<<p0.size()<<endl;
     //initialising corner points for the first frame
     // Create a mask image for drawing purposes
