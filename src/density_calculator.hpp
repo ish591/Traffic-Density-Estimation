@@ -32,7 +32,7 @@ float compute_dense_flow(Mat frame_cropped_previous, Mat frame_cropped_next, int
     cvtColor(dynamic_mat_color, dynamic_mat_bw, COLOR_BGR2GRAY);                  //converting into a grayscale matrix
     dynamic_mat_bw = dynamic_mat_bw > 12;                                         //threshold to convert grayscal to pure black-white image
     float dynamic_density = ((float)countNonZero(dynamic_mat_bw)) / total_pixels; //computation of dynamic density
-    imshow("dynamicMasked", dynamic_mat_color);
+    //imshow("dynamicMasked", dynamic_mat_color);
     return dynamic_density;
 }
 
@@ -61,7 +61,7 @@ pair<float, vector<Point2f>> compute_sparse_flow(Mat frame_cropped_previous, Mat
     Mat img;
     //cout<<colored_next_frame.size();
     add(colored_next_frame, mask, img);
-    imshow("Frame", img);
+    //imshow("Frame", img);
     waitKey(10);
     ans = (float)ans / 5000.0;
     //if (new_points.size()==0){new_points = p0;}
@@ -107,8 +107,8 @@ float compute_static(Mat frame, Mat homography, Rect crop_coordinates, Ptr<Backg
     // imshow("bg", frame_bg);
 
     // //show the frame in the created window
-    imshow("cropped", frame_cropped);
-    imshow("masked", frame_mask);
+    //imshow("cropped", frame_cropped);
+    //imshow("masked", frame_mask);
     float static_density = ((float)countNonZero(frame_mask)) / total_pixels; //computing static queue density
     return static_density;
 }
@@ -137,9 +137,9 @@ void density_calculator(string video_filename, Mat homography, Rect crop_coordin
     Ptr<BackgroundSubtractor> pBackSub;
     pBackSub = createBackgroundSubtractorMOG2(1, 60, false); //creating the background subtractor using frame_empty as the base
     pBackSub->apply(frame_empty, frame_empty_processed, 1.0);
-    namedWindow("cropped", WINDOW_NORMAL); //create a window for displaying cropped image
-    namedWindow("masked", WINDOW_NORMAL);  //create a window for displaying the mask
-    namedWindow("bg", WINDOW_NORMAL);      //create a window for displaying the background mask
+    //namedWindow("cropped", WINDOW_NORMAL); //create a window for displaying cropped image
+    //namedWindow("masked", WINDOW_NORMAL);  //create a window for displaying the mask
+    //namedWindow("bg", WINDOW_NORMAL);      //create a window for displaying the background mask
 
     int total_pixels = frame_empty.rows * frame_empty.cols;
     int framecounter = start_frame;

@@ -45,7 +45,7 @@ void method1(string video_filename, string output_file, vector<Point2f> pts_src,
     fin.close();
 }
 
-void method2(string video_filename,string output_file,  vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, int width, int height)
+void method2(string video_filename, string output_file, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, int width, int height)
 {
 
     for (int i = 0; i < 4; i++)
@@ -64,7 +64,7 @@ void method2(string video_filename,string output_file,  vector<Point2f> pts_src,
     density_calculator(video_filename, homography, crop_coordinates, frame_empty, BASE_SKIP, 0, total_frames, output_file, width, height, 0);
 }
 
-void method3(string video_filename,string output_file,  vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, int num_threads)
+void method3(string video_filename, string output_file, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, int num_threads)
 {
     Mat homography = findHomography(pts_src, pts_dst);
     Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
@@ -96,7 +96,8 @@ void method3(string video_filename,string output_file,  vector<Point2f> pts_src,
             y_coord += crop_coord[i - 1].height;
         threads.push_back(thread(density_calculator, video_filename, homography, crop_coord[i], frame_empty(Rect(0, y_coord, crop_coord[i].width, crop_coord[i].height)), BASE_SKIP, 0, total_frames, "out_3_" + to_string(i), 1920, 1088, 0));
     }
-    for (int i = 0; i < num_threads; i++){
+    for (int i = 0; i < num_threads; i++)
+    {
         threads[i].join();
     }
     ofstream fout(output_file);
@@ -125,7 +126,7 @@ void method3(string video_filename,string output_file,  vector<Point2f> pts_src,
     }
 }
 
-void method4(string video_filename,string output_file, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, int num_threads)
+void method4(string video_filename, string output_file, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, int num_threads)
 {
     Mat homography = findHomography(pts_src, pts_dst);
     Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
@@ -161,7 +162,7 @@ void method4(string video_filename,string output_file, vector<Point2f> pts_src, 
     }
 }
 
-void bonus_method(string video_filename,string output_file, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, bool sparse)
+void bonus_method(string video_filename, string output_file, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, bool sparse)
 {
     Mat homography = findHomography(pts_src, pts_dst);
     Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
@@ -177,7 +178,7 @@ void bonus_method(string video_filename,string output_file, vector<Point2f> pts_
     }
     else
     {
-        density_calculator(video_filename, homography, crop_coordinates, frame_empty, BASE_SKIP, 0, total_frames,output_file, 1920, 1088, 1);
+        density_calculator(video_filename, homography, crop_coordinates, frame_empty, BASE_SKIP, 0, total_frames, output_file, 1920, 1088, 1);
     }
     // last parameter is a boolean, 1 stands for sparse
     //performs sparse optical flow
@@ -208,9 +209,9 @@ pair<float, float> compute_error(string base_file, string compared_file, int tot
     return {queue_error, dynamic_error};
 }
 
-void call_method(int method_number, string video_filename, string output_file,  vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, ofstream &utility_runtime, int method_arg1 = 0, int method_arg2 = 0)
+void call_method(int method_number, string video_filename, string output_file, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, ofstream &utility_runtime, int method_arg1 = 0, int method_arg2 = 0)
 {
-    time_t start,end;
+    time_t start, end;
     time(&start);
     switch (method_number)
     {
@@ -218,7 +219,7 @@ void call_method(int method_number, string video_filename, string output_file,  
         method0(video_filename, output_file, pts_src, pts_dst, frame_empty, total_frames);
         break;
     case 1:
-            method1(video_filename, output_file,  pts_src, pts_dst, frame_empty, total_frames, method_arg1);
+        method1(video_filename, output_file, pts_src, pts_dst, frame_empty, total_frames, method_arg1);
         break;
     case 2:
         method2(video_filename, output_file, pts_src, pts_dst, frame_empty, total_frames, method_arg1, method_arg2);
@@ -235,7 +236,7 @@ void call_method(int method_number, string video_filename, string output_file,  
     }
 
     time(&end);
-    double total_time = double (end- start);
-    pair<float,float>errors = compute_error("./model_result/out_0.txt",output_file, total_frames);
-    utility_runtime << method_number << " " << errors.first<<" "<<errors.second<<" "<<total_time<<endl;
+    double total_time = double(end - start);
+    pair<float, float> errors = compute_error("./model_result/out_0.txt", output_file, total_frames);
+    utility_runtime << method_number << " " << method_arg1 << " " << method_arg2 << " " << errors.first << " " << errors.second << " " << total_time << endl;
 }

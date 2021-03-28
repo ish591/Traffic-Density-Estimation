@@ -49,9 +49,9 @@ for i in range(6):
 for values in f2:
 	val_list=values.split()
 	method_num = int(val_list[0])
-	runtimes[method_num].append(float(val_list[3]))
-	static_utility[method_num].append(float(val_list[1]))
-	dynamic_utility[method_num].append(float(val_list[2]))
+	runtimes[method_num].append(float(val_list[5]))
+	static_utility[method_num].append(float(val_list[3]))
+	dynamic_utility[method_num].append(float(val_list[4]))
 f2.close()
 for i in range(6):
 	if (len(runtimes[i])>1):
