@@ -245,6 +245,7 @@ int main(int argc, char *argv[])
     fout << "./results/method_0.txt" << endl;
     while (getline(fin, line))
     {
+        frame_empty = get_empty_frame(cap, 347 * 15);
         istringstream ss(line);
         vector<int> params;
         int n;
