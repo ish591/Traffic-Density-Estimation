@@ -88,7 +88,7 @@ pair<int, pair<int, int>> get_args(vector<int> params)
     {
         if (params.size() == 2)
         {
-            if (params[1] >= 5 && params[1] <= 5736)
+            if (params[1] >= 1)
             {
                 return {1, {params[1], 0}};
             }
@@ -232,7 +232,8 @@ int main(int argc, char *argv[])
     //regex expressions used to parse the input file
     // transform_video(cap, homography, crop_coordinates, frame_empty);
 
-    int total_frames = cap.get(CAP_PROP_FRAME_COUNT);
+    //int total_frames = cap.get(CAP_PROP_FRAME_COUNT);
+    int total_frames = 1000;
     double fps = cap.get(CAP_PROP_FPS);
     cout << "Number of frames: " << total_frames << endl;
     cout << "Frames per seconds : " << fps << endl;
@@ -250,6 +251,7 @@ int main(int argc, char *argv[])
         count++;
         if (ag.first == -1)
         {
+            //cout << line << endl;
             cout << "Invalid input file\n";
             return 0;
         }

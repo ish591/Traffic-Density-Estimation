@@ -3,10 +3,35 @@
 #include <fstream>
 #include <utility>
 #include "density_calculator.hpp"
+#include <pthread.h>
 #include <thread>
-#define BASE_SKIP 5
+#define BASE_SKIP 100
 using namespace std;
 using namespace cv;
+
+struct density_calc_args
+{
+    string video_filename;
+    Mat homography;
+    Rect crop_coordinates;
+    Mat frame_empty;
+    int skip;
+    int start_frame;
+    int end_frame;
+    string out_filename;
+    int width;
+    int height;
+    bool sparse;
+};
+
+void *call_density_calculator(void *arguments)
+{
+    struct density_calc_args *args = (struct density_calc_args *)arguments;
+    // cout << args->video_filename << endl;
+    // cout << args->homography.size() << endl;
+    density_calculator(args->video_filename, args->homography, args->crop_coordinates, args->frame_empty, args->skip, args->start_frame, args->end_frame, args->out_filename, args->width, args->height, args->sparse);
+    return NULL;
+}
 
 void method0(string video_filename, string output_file, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames)
 {
@@ -28,7 +53,7 @@ void method1(string video_filename, string output_file, vector<Point2f> pts_src,
     frame_empty = frame_empty(crop_coordinates);
 
     //process frame N, then N+skip_frames ..
-    density_calculator(video_filename, homography, crop_coordinates, frame_empty, skip_factor, 0, total_frames, "out_1_skipped", 1920, 1088, 0);
+    density_calculator(video_filename, homography, crop_coordinates, frame_empty, skip_factor * BASE_SKIP, 0, total_frames, "./results/out_1_skipped.txt", 1920, 1088, 0);
     //for intermediate frames use value of N
     ofstream fout(output_file);
     ifstream fin("./results/out_1_skipped.txt");
@@ -37,10 +62,8 @@ void method1(string video_filename, string output_file, vector<Point2f> pts_src,
     while (fin >> a)
     {
         fin >> b >> c;
-        for (int i = a; i <= min(a + skip_factor - 1, total_frames); i++)
-        {
+        for (int i = a; i <= min(a + BASE_SKIP * skip_factor - 1, total_frames); i += BASE_SKIP)
             fout << i << " " << b << " " << c << endl;
-        }
     }
     fin.close();
 }
@@ -86,19 +109,34 @@ void method3(string video_filename, string output_file, vector<Point2f> pts_src,
         curr_top_left_y = curr_top_left_y + curr_height;
         pixels.push_back(curr_height * width);
     }
-    vector<thread> threads;
+    vector<pthread_t> threads(num_threads);
     int y_coord;
+    struct density_calc_args args[num_threads];
     for (int i = 0; i < num_threads; i++)
     {
         if (i == 0)
             y_coord = 0;
         else
             y_coord += crop_coord[i - 1].height;
-        threads.push_back(thread(density_calculator, video_filename, homography, crop_coord[i], frame_empty(Rect(0, y_coord, crop_coord[i].width, crop_coord[i].height)), BASE_SKIP, 0, total_frames, "out_3_" + to_string(i), 1920, 1088, 0));
+
+        args[i].video_filename = video_filename;
+        args[i].homography = homography;
+        // cout << args.homography.type() << endl;
+        args[i].crop_coordinates = crop_coord[i];
+        args[i].frame_empty = frame_empty(Rect(0, y_coord, crop_coord[i].width, crop_coord[i].height));
+        args[i].skip = BASE_SKIP;
+        args[i].start_frame = 0;
+        args[i].end_frame = total_frames;
+        args[i].out_filename = "out_3_" + to_string(i) + ".txt";
+        args[i].width = 1920;
+        args[i].height = 1088;
+        args[i].sparse = false;
+        pthread_create(&threads[i], NULL, &call_density_calculator, &args[i]);
+        // threads.push_back(thread(density_calculator, video_filename, homography, crop_coord[i], frame_empty(Rect(0, y_coord, crop_coord[i].width, crop_coord[i].height)), BASE_SKIP, 0, total_frames, "out_3_" + to_string(i), 1920, 1088, 0));
     }
     for (int i = 0; i < num_threads; i++)
     {
-        threads[i].join();
+        pthread_join(threads[i], NULL);
     }
     ofstream fout(output_file);
     vector<ifstream> fin;
@@ -141,13 +179,30 @@ void method4(string video_filename, string output_file, vector<Point2f> pts_src,
     {
         frame_limits[i] = (total_frames * i) / num_threads;
     }
-    vector<thread> threads;
+
+    vector<pthread_t> threads(num_threads);
+    struct density_calc_args args[num_threads];
+
     for (int i = 0; i < num_threads; i++)
     {
-        threads.push_back(thread(density_calculator, video_filename, homography, crop_coordinates, frame_empty, BASE_SKIP, frame_limits[i], frame_limits[i + 1], "out_4_" + to_string(i), 1920, 1088, 0));
+        args[i].video_filename = video_filename;
+        args[i].homography = homography;
+        args[i].crop_coordinates = crop_coordinates;
+        args[i].frame_empty = frame_empty;
+        args[i].skip = BASE_SKIP;
+        args[i].start_frame = frame_limits[i];
+        args[i].end_frame = frame_limits[i + 1];
+        args[i].out_filename = "./results/out_4_" + to_string(i) + ".txt ";
+        args[i].width = 1920;
+        args[i].height = 1088;
+        args[i].sparse = false;
+        pthread_create(&threads[i], NULL, &call_density_calculator, &args[i]);
+        // threads.push_back(thread(density_calculator, video_filename, homography, crop_coordinates, frame_empty, BASE_SKIP, frame_limits[i], frame_limits[i + 1], "./results/out_4_" + to_string(i) + ".txt", 1920, 1088, 0));
     }
     for (int i = 0; i < num_threads; i++)
-        threads[i].join();
+    {
+        pthread_join(threads[i], NULL);
+    }
 
     ofstream fout(output_file);
     for (int i = 0; i < num_threads; i++)
