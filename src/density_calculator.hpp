@@ -133,6 +133,7 @@ void density_calculator(string video_filename, Mat homography, Rect crop_coordin
     ofstream fout;
     fout.open(out_filename);
     //resize(frame_empty, frame_empty, Size(width, height), 0, 0, INTER_CUBIC);
+    fout << "frame_number static_density dynamic_density" << endl;
     Mat frame_empty_processed;
     Ptr<BackgroundSubtractor> pBackSub;
     pBackSub = createBackgroundSubtractorMOG2(1, 60, false); //creating the background subtractor using frame_empty as the base

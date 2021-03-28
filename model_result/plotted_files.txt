@@ -1,0 +1,11 @@
+./results/method_0.txt
+./results/method_1_function_1.txt
+./results/method_1_function_2.txt
+./results/method_1_function_3.txt
+./results/method_2_function_4.txt
+./results/method_2_function_5.txt
+./results/method_3_function_6.txt
+./results/method_3_function_7.txt
+./results/method_4_function_8.txt
+./results/method_4_function_9.txt
+./results/method_4_function_10.txt

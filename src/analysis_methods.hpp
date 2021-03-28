@@ -5,7 +5,7 @@
 #include "density_calculator.hpp"
 #include <pthread.h>
 #include <thread>
-#define BASE_SKIP 100
+#define BASE_SKIP 5
 using namespace std;
 using namespace cv;
 
@@ -57,8 +57,11 @@ void method1(string video_filename, string output_file, vector<Point2f> pts_src,
     //for intermediate frames use value of N
     ofstream fout(output_file);
     ifstream fin("./results/out_1_skipped.txt");
+    string line;
+    getline(fin, line);
     int a;
-    float b, c;
+    double b, c;
+    fout << "frame_number static_density dynamic_density" << endl;
     while (fin >> a)
     {
         fin >> b >> c;
@@ -80,11 +83,11 @@ void method2(string video_filename, string output_file, vector<Point2f> pts_src,
     }
     Mat homography = findHomography(pts_src, pts_dst);
     Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
+    Mat frame_empty_warped;
+    warpPerspective(frame_empty, frame_empty_warped, homography, frame_empty.size()); //warping,cropping the background frame
+    Mat frame_empty_cropped = frame_empty(crop_coordinates);
 
-    warpPerspective(frame_empty, frame_empty, homography, frame_empty.size()); //warping,cropping the background frame
-    frame_empty = frame_empty(crop_coordinates);
-
-    density_calculator(video_filename, homography, crop_coordinates, frame_empty, BASE_SKIP, 0, total_frames, output_file, width, height, 0);
+    density_calculator(video_filename, homography, crop_coordinates, frame_empty_cropped, BASE_SKIP, 0, total_frames, output_file, width, height, 0);
 }
 
 void method3(string video_filename, string output_file, vector<Point2f> pts_src, vector<Point2f> pts_dst, Mat frame_empty, int total_frames, int num_threads)
@@ -93,9 +96,6 @@ void method3(string video_filename, string output_file, vector<Point2f> pts_src,
     Rect crop_coordinates = Rect(pts_dst[0].x, pts_dst[0].y, pts_dst[2].x - pts_dst[1].x, pts_dst[1].y - pts_dst[0].y);
     warpPerspective(frame_empty, frame_empty, homography, frame_empty.size()); //warping,cropping the background frame
     frame_empty = frame_empty(crop_coordinates);
-
-    if (num_threads > 5) //more threads allowed ??
-        num_threads = 5;
     vector<Rect> crop_coord;
     vector<int> pixels;
     int height = crop_coordinates.height;
@@ -127,7 +127,7 @@ void method3(string video_filename, string output_file, vector<Point2f> pts_src,
         args[i].skip = BASE_SKIP;
         args[i].start_frame = 0;
         args[i].end_frame = total_frames;
-        args[i].out_filename = "out_3_" + to_string(i) + ".txt";
+        args[i].out_filename = "./results/out_3_" + to_string(i) + ".txt";
         args[i].width = 1920;
         args[i].height = 1088;
         args[i].sparse = false;
@@ -141,18 +141,21 @@ void method3(string video_filename, string output_file, vector<Point2f> pts_src,
     ofstream fout(output_file);
     vector<ifstream> fin;
     int total_pixels = 0;
+    string line;
     for (int i = 0; i < num_threads; i++)
     {
         fin.push_back(ifstream("./results/out_3_" + to_string(i) + ".txt"));
         total_pixels += pixels[i];
+        getline(fin[i], line);
     }
     int a;
-    float b, c;
+    double b, c;
+    fout << "frame_number static_density dynamic_density" << endl;
     while (fin[0] >> a)
     {
         fin[0] >> b >> c;
 
-        float b_acc = b * pixels[0], c_acc = c * pixels[0];
+        double b_acc = b * pixels[0], c_acc = c * pixels[0];
 
         for (int i = 1; i < num_threads; i++)
         {
@@ -172,8 +175,6 @@ void method4(string video_filename, string output_file, vector<Point2f> pts_src,
     warpPerspective(frame_empty, frame_empty, homography, frame_empty.size()); //warping,cropping the background frame
     frame_empty = frame_empty(crop_coordinates);
 
-    if (num_threads > 5)
-        num_threads = 5;
     int frame_limits[num_threads + 1];
     for (int i = 0; i <= num_threads; i++)
     {
@@ -192,7 +193,7 @@ void method4(string video_filename, string output_file, vector<Point2f> pts_src,
         args[i].skip = BASE_SKIP;
         args[i].start_frame = frame_limits[i];
         args[i].end_frame = frame_limits[i + 1];
-        args[i].out_filename = "./results/out_4_" + to_string(i) + ".txt ";
+        args[i].out_filename = "./results/out_4_" + to_string(i) + ".txt";
         args[i].width = 1920;
         args[i].height = 1088;
         args[i].sparse = false;
@@ -203,12 +204,14 @@ void method4(string video_filename, string output_file, vector<Point2f> pts_src,
     {
         pthread_join(threads[i], NULL);
     }
-
     ofstream fout(output_file);
+    fout << "frame_number static_density dynamic_density" << endl;
     for (int i = 0; i < num_threads; i++)
     {
-        ifstream fin("./results/out_4_" + to_string(i) + ".txt");
+        ifstream fin;
+        fin.open("./results/out_4_" + to_string(i) + ".txt");
         string line;
+        getline(fin, line);
         while (getline(fin, line))
         {
             fout << line << endl;
@@ -243,15 +246,18 @@ void bonus_method(string video_filename, string output_file, vector<Point2f> pts
     //cout<<" seconds "<<endl;
 }
 
-pair<float, float> compute_error(string base_file, string compared_file, int total_frames)
+pair<double, double> compute_error(string base_file, string compared_file, int total_frames)
 {
 
     ifstream fin1(base_file);
+    string line;
+    getline(fin1, line);
     ifstream fin2(compared_file);
+    getline(fin2, line);
     int a1, a2;
-    float b, c, b1, c1;
-    float queue_error = 0.0;
-    float dynamic_error = 0.0;
+    double b, c, b1, c1;
+    double queue_error = 0.0;
+    double dynamic_error = 0.0;
     while (fin1 >> a1)
     {
         fin1 >> b >> c;
@@ -259,8 +265,9 @@ pair<float, float> compute_error(string base_file, string compared_file, int tot
         queue_error += (b - b1) * (b - b1);
         dynamic_error += (c - c1) * (c - c1);
     }
-    queue_error = (float)sqrt(queue_error) / total_frames;
-    dynamic_error = (float)sqrt(dynamic_error) / total_frames;
+    double total_processed = (double)total_frames / BASE_SKIP;
+    queue_error = (double)sqrt((double)(queue_error) / total_processed);
+    dynamic_error = (double)sqrt((double)(dynamic_error) / total_processed);
     return {queue_error, dynamic_error};
 }
 
@@ -292,6 +299,6 @@ void call_method(int method_number, string video_filename, string output_file, v
 
     time(&end);
     double total_time = double(end - start);
-    pair<float, float> errors = compute_error("./model_result/out_0.txt", output_file, total_frames);
+    pair<double, double> errors = compute_error("./results/method_0.txt", output_file, total_frames);
     utility_runtime << method_number << " " << method_arg1 << " " << method_arg2 << " " << errors.first << " " << errors.second << " " << total_time << endl;
 }

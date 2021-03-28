@@ -76,6 +76,7 @@ pair<int, pair<int, int>> get_args(vector<int> params)
 {
     switch (params[0])
     {
+        /*
     case 0:
     {
         if (params.size() == 1)
@@ -84,6 +85,7 @@ pair<int, pair<int, int>> get_args(vector<int> params)
         }
         break;
     }
+    */
     case 1:
     {
         if (params.size() == 2)
@@ -218,6 +220,7 @@ int main(int argc, char *argv[])
     ofstream fout1;
     fout.open("./results/plotted_files.txt");
     fout1.open("./results/utility_runtime.txt");
+    fout1 << "method argument1 argument2 static_error dynamic_error runtime" << endl;
     getline(fin, line);
     string video_filename = line;
     VideoCapture cap(video_filename);
@@ -232,12 +235,14 @@ int main(int argc, char *argv[])
     //regex expressions used to parse the input file
     // transform_video(cap, homography, crop_coordinates, frame_empty);
 
-    //int total_frames = cap.get(CAP_PROP_FRAME_COUNT);
-    int total_frames = 1000;
+    int total_frames = cap.get(CAP_PROP_FRAME_COUNT);
+
     double fps = cap.get(CAP_PROP_FPS);
     cout << "Number of frames: " << total_frames << endl;
     cout << "Frames per seconds : " << fps << endl;
 
+    call_method(0, video_filename, "./results/method_0.txt", pts_src, pts_dst, frame_empty, total_frames, fout1);
+    fout << "./results/method_0.txt" << endl;
     while (getline(fin, line))
     {
         istringstream ss(line);
@@ -258,9 +263,9 @@ int main(int argc, char *argv[])
         else
         {
             string out_file_name = "./results/method_" + to_string(ag.first) + "_function_" + to_string(count) + ".txt";
-            fout << out_file_name << endl;
             //cout << out_file_name << endl;
             call_method(ag.first, video_filename, out_file_name, pts_src, pts_dst, frame_empty, total_frames, fout1, ag.second.first, ag.second.second);
+            fout << out_file_name << endl;
             cout << endl;
         }
     }
