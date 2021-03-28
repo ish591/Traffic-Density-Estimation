@@ -13,7 +13,7 @@ all:
 	echo "Generated $(BUILD)/main.out \nEnter 'make run' to execute."
 
 graph:
-	if [ -f "./results/out.txt" ]; then python src/graph.py; else echo "output file not found"; fi
+	python src/graph.py
 
 download: 
 	if [ -f "./assets/trafficvideo.mp4" ]; then echo "Already downloaded!"; else curl https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/trafficvideo.mp4 -o assets/trafficvideo.mp4; fi
@@ -26,6 +26,8 @@ clean:
 	rm -rf $(BUILD)
 	rm -f *.o
 	rm -f *.jpg
+	rm -f results/*.png
+	rm -f results/method*
 	echo "Cleaned."
 
 help: 

@@ -8,7 +8,7 @@ Ishaan Singh : 2019CS10359
 #include <opencv2/opencv.hpp>
 #include <fstream>
 #include <utility>
-
+#include <regex>
 // #include "density_calculator.hpp"
 #include "process_video.hpp"
 #include "analysis_methods.hpp"
@@ -18,7 +18,6 @@ using namespace cv;
 
 // stores the selected points as pairs of integers
 vector<pair<int, int>> selected_pts;
-
 // mouse callback function, is executed when the user clicks on the initial image to select points
 void clickEvent(int event, int x, int y, int flags, void *params)
 {
@@ -73,7 +72,59 @@ vector<Point2f> get_dst_points(vector<Point2f> pts_src)
     pts_dst.push_back(Point2f(right_x, top_y));
     return pts_dst;
 }
-
+pair<int,pair<int,int>> get_args(vector<int>params){
+    switch (params[0]){
+        case 0:{
+            if (params.size()==1){return {0,{0,0}};}
+            break;
+        }
+        case 1:{
+            if (params.size()==2){
+                if (params[1]>=5 && params[1]<=5736){return {1,{params[1],0}};}
+                break;
+            }
+            break;
+        }
+        case 2:{
+            if (params.size()==3){
+                if(params[1]>=1 && params[1]<=1920 && params[2]>=1 && params[2]<=1088){
+                    return {2,{params[1],params[2]}};
+                }
+                break;
+            }
+            break;
+        }
+        case 3:{
+            if (params.size()==2){
+                if (params[1]>=1){
+                    return {3,{params[1],0}};
+                }
+                break;
+            }
+            break;
+        }
+       case 4:{
+           if (params.size()==2){
+               if (params[1]>=1){
+                   return {4,{params[1],0}};
+               }
+               break;
+           }
+           break;
+       }
+      case 5:{
+          if (params.size()==2){
+              if (params[1]==1 || params[1]==0){
+                  return {5,{params[1],0}};
+              }
+              break;
+          }
+          break;
+      }
+     default : return {-1,{-1,-1}};
+    }
+    return {-1,{-1,-1}};
+}
 int main(int argc, char *argv[])
 {
     setNumThreads(1);
@@ -89,7 +140,6 @@ int main(int argc, char *argv[])
         cin.get(); // wait for any key press
         return 0;
     }
-    ifstream fin("./src/input.txt");
     // // reading the two images in grayscale
     Mat im_empty = imread("./assets/empty.jpg", IMREAD_GRAYSCALE);
     Mat im_traffic = imread("./assets/traffic.jpg", IMREAD_GRAYSCALE);
@@ -112,14 +162,14 @@ int main(int argc, char *argv[])
     vector<Point2f> pts_src, pts_dst;
     //pts_src = get_src_points();
 
-    pts_src.push_back(Point2f(961, 230));
-    pts_src.push_back(Point2f(324, 1063));
-    pts_src.push_back(Point2f(1571, 1065));
-    pts_src.push_back(Point2f(1288, 224));
-    //pts_src.push_back(Point2f(967, 229));
-    //pts_src.push_back(Point2f(280, 1045));
-    //pts_src.push_back(Point2f(1517, 1043));
-    //pts_src.push_back(Point2f(1268, 220));
+    //pts_src.push_back(Point2f(961, 230));
+    //pts_src.push_back(Point2f(324, 1063));
+    //pts_src.push_back(Point2f(1571, 1065));
+    //pts_src.push_back(Point2f(1288, 224));
+    pts_src.push_back(Point2f(967, 229));
+    pts_src.push_back(Point2f(280, 1045));
+    pts_src.push_back(Point2f(1517, 1043));
+    pts_src.push_back(Point2f(1268, 220));
 
     pts_dst = get_dst_points(pts_src);
     waitKey(100);
@@ -144,16 +194,45 @@ int main(int argc, char *argv[])
     // imwrite("./results/traffic_cropped.jpg", im_traffic_cropped);
 
     Mat frame_empty = get_empty_frame(cap, 347 * 15);
-
+    
+    //regex expressions used to parse the input file
     // transform_video(cap, homography, crop_coordinates, frame_empty);
 
-    cout << frame_empty.size();
     int total_frames = cap.get(CAP_PROP_FRAME_COUNT);
     double fps = cap.get(CAP_PROP_FPS);
     cout << "Number of frames: " << total_frames << endl;
     cout << "Frames per seconds : " << fps << endl;
-
-    call_method(0, video_filename, pts_src, pts_dst, frame_empty, total_frames, 0, 0);
-
+    
+    ifstream fin("./src/input.txt");
+    string line;
+    int count =0;
+    ofstream fout;
+    ofstream fout1;
+    fout.open("./results/plotted_files.txt");
+    fout1.open("./results/utility_runtime.txt");
+    while(getline(fin, line)){
+        istringstream ss(line);
+        vector<int>params;
+        int n;
+        while(ss>>n){
+            params.push_back(n);
+        }
+        pair<int,pair<int,int>> ag = get_args(params);
+        count++;
+        if (ag.first == -1){
+            cout<<"Invalid input file\n";
+            return 0;
+        }
+        else{
+            cout<<"Output for function number: "<<count<<"\n\n";
+            string out_file_name = "./results/method_"+to_string(ag.first)+"_function_"+to_string(count)+".txt";
+            fout << out_file_name <<endl;
+            cout<<out_file_name<<endl;
+            call_method(ag.first, video_filename, out_file_name, pts_src, pts_dst, frame_empty, total_frames, fout1, ag.second.first, ag.second.second);
+            cout<<endl;
+        }
+    }
+    fout.close();
+    fout1.close();
     return 0;
 }

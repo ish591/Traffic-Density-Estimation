@@ -131,7 +131,7 @@ void density_calculator(string video_filename, Mat homography, Rect crop_coordin
     // waitKey(0);
     //opening the output file
     ofstream fout;
-    fout.open("./results/" + out_filename + ".txt", std::ofstream::out | std::ofstream::trunc);
+    fout.open(out_filename);
     //resize(frame_empty, frame_empty, Size(width, height), 0, 0, INTER_CUBIC);
     Mat frame_empty_processed;
     Ptr<BackgroundSubtractor> pBackSub;
