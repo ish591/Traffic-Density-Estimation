@@ -238,8 +238,8 @@ int main(int argc, char *argv[])
     cout << "Number of frames: " << total_frames << endl;
     cout << "Frames per seconds : " << fps << endl;
 
-    call_method(0, video_filename, RESULTS_DIR + "method_0.txt", pts_src, pts_dst, frame_empty, total_frames, fout1);
-    fout << "method_0.txt" << endl;
+   //call_method(0, video_filename, RESULTS_DIR + "method_0.txt", pts_src, pts_dst, frame_empty, total_frames, fout1);
+    //fout << "method_0.txt" << endl;
     while (getline(fin, line))
     {
         frame_empty = get_empty_frame(cap, 347 * 15);
