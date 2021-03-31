@@ -3,11 +3,6 @@ Made by:
 Aman Verma   : 2019CS50419
 Ishaan Singh : 2019CS10359
 */
-
-#include <iostream>
-#include <opencv2/opencv.hpp>
-#include <fstream>
-#include <utility>
 #include <regex>
 // #include "density_calculator.hpp"
 #include "process_video.hpp"
@@ -208,18 +203,18 @@ int main(int argc, char *argv[])
     // im_traffic_cropped = im_traffic_warped(crop_coordinates);
 
     // // writing the warped and cropped images
-    // imwrite("./results/empty_warped.jpg", im_empty_warped);
-    // imwrite("./results/empty_cropped.jpg", im_empty_cropped);
-    // imwrite("./results/traffic_warped.jpg", im_traffic_warped);
-    // imwrite("./results/traffic_cropped.jpg", im_traffic_cropped);
+    // imwrite(RESULTS_DIR + "empty_warped.jpg", im_empty_warped);
+    // imwrite(RESULTS_DIR + "empty_cropped.jpg", im_empty_cropped);
+    // imwrite(RESULTS_DIR + "traffic_warped.jpg", im_traffic_warped);
+    // imwrite(RESULTS_DIR + "traffic_cropped.jpg", im_traffic_cropped);
 
     ifstream fin("./input.txt");
     string line;
     int count = 0;
     ofstream fout;
     ofstream fout1;
-    fout.open("../Analysis/results/plotted_files.txt");
-    fout1.open("../Analysis/results/utility_runtime.txt");
+    fout.open(RESULTS_DIR + "plotted_files.txt");
+    fout1.open(RESULTS_DIR + "utility_runtime.txt");
     fout1 << "method argument1 argument2 static_error dynamic_error runtime" << endl;
     getline(fin, line);
     string video_filename = line;
@@ -241,8 +236,8 @@ int main(int argc, char *argv[])
     cout << "Number of frames: " << total_frames << endl;
     cout << "Frames per seconds : " << fps << endl;
 
-    call_method(0, video_filename, "../Analysis/results/method_0.txt", pts_src, pts_dst, frame_empty, total_frames, fout1);
-    fout << "../Analysis/results/method_0.txt" << endl;
+    call_method(0, video_filename, RESULTS_DIR + "method_0.txt", pts_src, pts_dst, frame_empty, total_frames, fout1);
+    fout << "method_0.txt" << endl;
     while (getline(fin, line))
     {
         frame_empty = get_empty_frame(cap, 347 * 15);
@@ -263,9 +258,9 @@ int main(int argc, char *argv[])
         }
         else
         {
-            string out_file_name = "../Analysis/results/method_" + to_string(ag.first) + "_function_" + to_string(count) + ".txt";
+            string out_file_name = "method_" + to_string(ag.first) + "_function_" + to_string(count) + ".txt";
             //cout << out_file_name << endl;
-            call_method(ag.first, video_filename, out_file_name, pts_src, pts_dst, frame_empty, total_frames, fout1, ag.second.first, ag.second.second);
+            call_method(ag.first, video_filename, RESULTS_DIR + out_file_name, pts_src, pts_dst, frame_empty, total_frames, fout1, ag.second.first, ag.second.second);
             fout << out_file_name << endl;
             cout << endl;
         }

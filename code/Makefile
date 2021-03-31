@@ -2,29 +2,28 @@ CFLAGS = -pthread -std=c++11 -Wall
 OPENCV = `pkg-config opencv --cflags --libs`
 LIBS = $(OPENCV)
 
-SRC = ./Source_code
+SRC = ./src
 BUILD = ./build
+ANALYSIS = ../analysis
+ASSETS = ./assets
 
 all:
 	mkdir -p $(BUILD)
-	mkdir -p ../Analysis/results
+	mkdir -p $(ANALYSIS)/results
 	echo "Building.."
 	g++ $(CFLAGS) $(LIBS) $(SRC)/main.cpp -o $(BUILD)/main.out
 	echo "Generated $(BUILD)/main.out \nEnter 'make run' to execute."
 
-plots:
-	python3 ../Analysis/plotter.py
-
 download: 
-	if [ -f "./Assets/trafficvideo.mp4" ]; then echo "Already downloaded!"; else curl https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/trafficvideo.mp4 -o assets/trafficvideo.mp4; fi
+	if [ -f "$(ASSETS)/trafficvideo.mp4" ]; then echo "Already downloaded!"; else curl https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/trafficvideo.mp4 -o $(ASSETS)/trafficvideo.mp4; fi
 
 run:
-	mkdir -p ../Analysis/results
+	mkdir -p $(ANALYSIS)/results
 	if [ -f "./build/main.out" ]; then echo "Running $(BUILD)/main.out"; $(BUILD)/main.out; else echo "Build not found. Run 'make' first."; fi
 
 clean:
 	rm -rf $(BUILD)
-	rm -rf ../Analysis/results
+	rm -rf $(ANALYSIS)/results
 	echo "Cleaned."
 
 help: 
@@ -32,13 +31,7 @@ help:
 	echo "'make'         : builds the executable."
 	echo "'make run'     : runs the executable. Does not create the executable."
 	echo "'make clean'   : removes the build files."
-	echo "'make plots'   : plot the graphs for the results in the Analysis directory and save it in the results directory."
 	echo "'make download': downloads assets and stores them in the appropriate directory."
-
-model:
-	rm -rf ../Analysis/model_result
-	mkdir ../Analysis/model_result
-	cp ../Analysis/results/* ../Analysis/model_result/
 
 .DEFAULT: 
 	@echo "No such command found. Run 'make help' for more info."

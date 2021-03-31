@@ -26,14 +26,6 @@ To execute the compiled file run (Recommended):
 make run # To execute ./build/main.out
 ```
 
-### Plotting
-
-```bash
-make plots
-# plots the graphs of static and dynamic queue densities as functions of time using matplotlib of python.
-# The densities are taken from a text file named out.txt, and the graph is stored as a png image in the results directory.
-```
-
 ### Additional Commands
 
 A few additional make rules:

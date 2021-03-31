@@ -1,13 +1,11 @@
-#include <iostream>
-#include <opencv2/opencv.hpp>
-#include <fstream>
-#include <utility>
 #include "density_calculator.hpp"
 #include <pthread.h>
 #include <thread>
-#define BASE_SKIP 5
+#define BASE_SKIP 3
 using namespace std;
 using namespace cv;
+
+string RESULTS_DIR = "../analysis/results/";
 
 struct density_calc_args
 {
@@ -53,10 +51,10 @@ void method1(string video_filename, string output_file, vector<Point2f> pts_src,
     frame_empty = frame_empty(crop_coordinates);
 
     //process frame N, then N+skip_frames ..
-    density_calculator(video_filename, homography, crop_coordinates, frame_empty, skip_factor * BASE_SKIP, 0, total_frames, "../Analysis/results/out_1_skipped.txt", 1920, 1088, 0);
+    density_calculator(video_filename, homography, crop_coordinates, frame_empty, skip_factor * BASE_SKIP, 0, total_frames, RESULTS_DIR + "out_1_skipped.txt", 1920, 1088, 0);
     //for intermediate frames use value of N
     ofstream fout(output_file);
-    ifstream fin("../Analysis/results/out_1_skipped.txt");
+    ifstream fin(RESULTS_DIR + "out_1_skipped.txt");
     string line;
     getline(fin, line);
     int a;
@@ -127,7 +125,7 @@ void method3(string video_filename, string output_file, vector<Point2f> pts_src,
         args[i].skip = BASE_SKIP;
         args[i].start_frame = 0;
         args[i].end_frame = total_frames;
-        args[i].out_filename = "../Analysis/results/out_3_" + to_string(i) + ".txt";
+        args[i].out_filename = RESULTS_DIR + "out_3_" + to_string(i) + ".txt";
         args[i].width = 1920;
         args[i].height = 1088;
         args[i].sparse = false;
@@ -144,7 +142,7 @@ void method3(string video_filename, string output_file, vector<Point2f> pts_src,
     string line;
     for (int i = 0; i < num_threads; i++)
     {
-        fin.push_back(ifstream("../Analysis/results/out_3_" + to_string(i) + ".txt"));
+        fin.push_back(ifstream(RESULTS_DIR + "out_3_" + to_string(i) + ".txt"));
         total_pixels += pixels[i];
         getline(fin[i], line);
     }
@@ -193,12 +191,11 @@ void method4(string video_filename, string output_file, vector<Point2f> pts_src,
         args[i].skip = BASE_SKIP;
         args[i].start_frame = frame_limits[i];
         args[i].end_frame = frame_limits[i + 1];
-        args[i].out_filename = "../Analysis/results/out_4_" + to_string(i) + ".txt";
+        args[i].out_filename = RESULTS_DIR + "out_4_" + to_string(i) + ".txt";
         args[i].width = 1920;
         args[i].height = 1088;
         args[i].sparse = false;
         pthread_create(&threads[i], NULL, &call_density_calculator, &args[i]);
-        // threads.push_back(thread(density_calculator, video_filename, homography, crop_coordinates, frame_empty, BASE_SKIP, frame_limits[i], frame_limits[i + 1], "./results/out_4_" + to_string(i) + ".txt", 1920, 1088, 0));
     }
     for (int i = 0; i < num_threads; i++)
     {
@@ -209,7 +206,7 @@ void method4(string video_filename, string output_file, vector<Point2f> pts_src,
     for (int i = 0; i < num_threads; i++)
     {
         ifstream fin;
-        fin.open("../Analysis/results/out_4_" + to_string(i) + ".txt");
+        fin.open(RESULTS_DIR + "out_4_" + to_string(i) + ".txt");
         string line;
         getline(fin, line);
         while (getline(fin, line))
@@ -299,6 +296,6 @@ void call_method(int method_number, string video_filename, string output_file, v
 
     time(&end);
     double total_time = double(end - start);
-    pair<double, double> errors = compute_error("../Analysis/results/method_0.txt", output_file, total_frames);
+    pair<double, double> errors = compute_error(RESULTS_DIR + "method_0.txt", output_file, total_frames);
     utility_runtime << method_number << " " << method_arg1 << " " << method_arg2 << " " << errors.first << " " << errors.second << " " << total_time << endl;
 }

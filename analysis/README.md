@@ -9,11 +9,11 @@ An analysis of the results along with the plots can be read in [report.pdf](repo
 
 ### Plotting
 
-To plot:
-
 ```bash
-cd Analysis/
-make # Alternatively you can run 'make plots'
+cd analysis
+make plots
+# plots the graphs of static and dynamic queue densities as functions of time using matplotlib of python.
+# The densities are taken from a text file named out.txt, and the graph is stored as a png image in the results directory.
 ```
 
 ### Files
