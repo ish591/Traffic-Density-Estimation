@@ -29,11 +29,11 @@ A tool for estimating traffic density using traffic-cams.
 
 ## Test
 
-To run the code cd into the Code directory and check out [Code/README.md](Code/README.md)
+To run the code cd into the Code directory and check out [code/README.md](code/README.md)
 
 ## Analysis
 
-To see the results and analysis check out [Analysis/README.md](Analysis/README.md)
+To see the results and analysis check out [analysis/README.md](analysis/README.md)
 
 ## Developers
 

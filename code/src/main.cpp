@@ -11,8 +11,10 @@ Ishaan Singh : 2019CS10359
 using namespace std;
 using namespace cv;
 
+string ASSETS_DIR = "./assets/";
 // stores the selected points as pairs of integers
-vector<pair<int, int>> selected_pts;
+vector<pair<int, int>>
+    selected_pts;
 // mouse callback function, is executed when the user clicks on the initial image to select points
 void clickEvent(int event, int x, int y, int flags, void *params)
 {
@@ -149,15 +151,15 @@ pair<int, pair<int, int>> get_args(vector<int> params)
 int main(int argc, char *argv[])
 {
     setNumThreads(0);
-    //string video_filename = "./assets/trafficvideo.mp4";
+    //string video_filename = ASSETS_DIR + "trafficvideo.mp4";
     //if (argc > 1)
     // video_filename = argv[1];
 
     // Open video file
 
     // // reading the two images in grayscale
-    Mat im_empty = imread("../Assets/empty.jpg", IMREAD_GRAYSCALE);
-    Mat im_traffic = imread("./Assets/traffic.jpg", IMREAD_GRAYSCALE);
+    Mat im_empty = imread(ASSETS_DIR + "empty.jpg", IMREAD_GRAYSCALE);
+    Mat im_traffic = imread(ASSETS_DIR + "traffic.jpg", IMREAD_GRAYSCALE);
 
     // // creating a copy of the first image and displaying it
     // Mat im_empty_copy = im_empty.clone();
