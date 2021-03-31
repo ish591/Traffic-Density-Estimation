@@ -5,7 +5,7 @@ An analysis of the results along with the plots can be read in [report.pdf](repo
 ### Contents
 
 - results/ : The results obtained on running the program are saved in the results directory.
-- model_result/ : This directory demonstrates the model results used to analyse the runtime of the code.
+- model_result/ : This directory demonstrates the model results used to analyse the runtime/utility of the code. 
 
 ### Plotting
 
@@ -38,3 +38,12 @@ The various output files produced in results/ are :
 - methodx_utility_parameter.jpg: Plot for utility vs parameter for method number x.
 - methodx_utility_runtime.jpg: Plot for utility vs runtime for method number x.
 - plotted_files.txt : This contains the list of the output files of the form method_0.txt and method_x_function_y.txt. These are the final output files which are used for plotting and analysis.
+
+The various output files present in model_result are :
+
+- All the types of output files enlisted above run on various parameters for all the methods
+- method_x_CPU_usage.txt : Here, x can be 3 or 4. This contains the values of CPU usage for various values of threads run on methods 3 and 4.
+- method_x_memory.txt : Here, x can be 3 or 4. This contains the values of memory usage for various values of threads run on methods 3 and 4.
+- method_x_CPU_usage.jpg : Here, x can be 3 or 4. This contains the plots of CPU usage vs number of threads run on methods 3 and 4
+- method_x_memory.jpg : Here, x can be 3 or 4. This contains the plots of memory usage for number of threads run on methods 3 and 4
+- memory_cpu.py : This python file is used for plotting the above mentioned graphs.

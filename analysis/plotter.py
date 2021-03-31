@@ -78,6 +78,7 @@ for i in range(1,6):
 
 df
 for i in range(1, 6):
+    df1 = df[(df['method'] == i)]
     if (len(df1)>0):
         df1 = df1.sort_values('parameter'+str(i), ascending = True)
         line_graph = df1[['static_utility', 'dynamic_utility', 'parameter' + str(i)]].plot(kind = "line", x = 'parameter'+str(i),style=['.-','.-'],figsize=(10,5), legend = True, title = "Method "+str(i)+" Utility Vs Parameter")
@@ -95,11 +96,8 @@ for i in range(1, 6):
         fig.savefig(RESULTS_DIR+'method'+str(i)+'_utility_parameter'+'.jpg', facecolor=fig.get_facecolor(), transparent=True, dpi=300,bbox_inches='tight')
         plt.close()
 for i in range(1, 6):
-    if i!=5:
-        df1 = df[(df['method']==i)]
-    else:
-        df1 = df[(df['method'] == i) | (df['method']==0)]
-    if ((i<5 and len(df1)>0) or i==5 and len(df1)>1):
+    df1 = df[(df['method'] == i) | (df['method']==0)]
+    if (len(df1)>1):
         df1 = df1.sort_values('parameter'+str(i), ascending = True)
         line_graph = df1[['runtime', 'parameter' + str(i)]].plot(kind = "line",style=['.-','.-'] ,x = 'parameter'+str(i),figsize=(10,5), legend = True, title = "Method "+str(i)+" Runtime Vs Parameter")
         if (i==1):
