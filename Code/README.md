@@ -1,7 +1,3 @@
-# Traffic Density Estimation
-
-A tool for estimating traffic density using traffic-cams.
-
 ## Testing
 
 ### Build
@@ -9,7 +5,8 @@ A tool for estimating traffic density using traffic-cams.
 Make sure OpenCV has been installed and is configured with pkg-config. Clone or extract the repository and run
 
 ```bash
-cd Traffic-Density-Estimation
+cd Traffic-Density-Estimation/
+cd Code/
 make # To compile src/main.cpp
 ```
 
@@ -18,7 +15,7 @@ make # To compile src/main.cpp
 ```bash
 make download # To download the video and place it in the appropriate directory appropriately.
 # In case you already have the video, copy it into the assets directory.
-cp path/to/mp4/video/file assets/trafficvideo.mp4
+cp path/to/mp4/video/file ./Assets/trafficvideo.mp4
 ```
 
 ### Run
@@ -29,21 +26,14 @@ To execute the compiled file run (Recommended):
 make run # To execute ./build/main.out
 ```
 
-Alternatively, you can run
+### Plotting
 
 ```bash
-# Do not cd into the build folder to run the executable
-./build/main.out # runs ./assets/trafficvideo.mp4 by default
-# you can also provide the relative or absolute path to a video file to run it
-./build/main.out assets/trafficvideo.mp4
-```
-### Graph plotting
-
-```bash
-make graph 
+make plots
 # plots the graphs of static and dynamic queue densities as functions of time using matplotlib of python.
 # The densities are taken from a text file named out.txt, and the graph is stored as a png image in the results directory.
 ```
+
 ### Additional Commands
 
 A few additional make rules:
@@ -51,30 +41,6 @@ A few additional make rules:
 ```bash
 make clean      # To clean the build and runtime files run.
 make help       # To see all make options.
-make download   # To download the video and store is in the assets directory
 ```
 
 An incorrect make rule helps the user by directing them to the 'make help' command.
-
-## Functionality
-
-### Current
-
-- Select points on an empty road for configuration.
-- Returns a top view of the road by applying a homography computed using OpenCV.
-- Crops the appropriate region and outputs various views with the applied homography.
-- Determines static density by using background subtraction with an empty frame.
-- Determines dynamic density by using optical flow across frames.
-
-### Salient Features
-
-- Shows the marked points on the image as the user selects them for convenience.
-- Points can be selected in any order and are mapped appropriately.
-- Calculates the warp destination coordinates dynamically to incorporate different road sizes in an attempt to maintain the aspect ratio.
-- Displays cropped frame as well as the computed static and dynamic masks.
-- Automated commands for easier evaluation.
-
-## Developers
-
-- Aman Verma : 2019CS50419 <br>
-- Ishaan Singh : 2019CS10359

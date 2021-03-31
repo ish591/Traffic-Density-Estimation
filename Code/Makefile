@@ -12,7 +12,7 @@ all:
 	g++ $(CFLAGS) $(LIBS) $(SRC)/main.cpp -o $(BUILD)/main.out
 	echo "Generated $(BUILD)/main.out \nEnter 'make run' to execute."
 
-graph:
+plots:
 	python3 ../Analysis/plotter.py
 
 download: 
@@ -32,13 +32,13 @@ help:
 	echo "'make'         : builds the executable."
 	echo "'make run'     : runs the executable. Does not create the executable."
 	echo "'make clean'   : removes the build files."
-	echo "'make graph'   : plot the graph for results/out.txt and save it in the results directory."
+	echo "'make plots'   : plot the graphs for the results in the Analysis directory and save it in the results directory."
 	echo "'make download': downloads assets and stores them in the appropriate directory."
 
 model:
-	rm -rf model_result
-	mkdir model_result
-	cp results/* model_result/
+	rm -rf ../Analysis/model_result
+	mkdir ../Analysis/model_result
+	cp ../Analysis/results/* ../Analysis/model_result/
 
 .DEFAULT: 
 	@echo "No such command found. Run 'make help' for more info."
